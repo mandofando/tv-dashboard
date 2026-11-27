@@ -1081,78 +1081,112 @@ setInterval(() => {
   renderNewsCol('news-welt', newsPools.welt);
 }, 14000);
 
-// ==================== 6. REALISTIC OCEAN WAVES (WEB AUDIO) + POMODORO ====================
+// ==================== 6. REALISTIC ROLLING OCEAN WAVES (WEB AUDIO) + POMODORO ====================
 const OceanAudio = (() => {
-  let ctx = null, master = null, runningAudio = false;
+  let ctx = null, master = null, noiseBuf = null, bedGain = null, active = false, waveTimeout = null;
+
   function init() {
     if (ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     ctx = new AC();
 
-    // 8-second seamless brown-ish noise buffer for warm, realistic surf
+    // Create warm pink-brown noise buffer (6s) for natural water texture
     const sr = ctx.sampleRate;
-    const len = sr * 8;
-    const buf = ctx.createBuffer(2, len, sr);
+    const len = sr * 6;
+    noiseBuf = ctx.createBuffer(2, len, sr);
     for (let ch = 0; ch < 2; ch++) {
-      const data = buf.getChannelData(ch);
-      let last = 0;
+      const out = noiseBuf.getChannelData(ch);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
       for (let i = 0; i < len; i++) {
-        const white = Math.random() * 2 - 1;
-        last = (last + 0.025 * white) / 1.025;
-        data[i] = last * 3.2;
+        const w = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + w * 0.0555179;
+        b1 = 0.99332 * b1 + w * 0.0750759;
+        b2 = 0.96900 * b2 + w * 0.1538520;
+        b3 = 0.86650 * b3 + w * 0.3104856;
+        b4 = 0.55000 * b4 + w * 0.5329522;
+        b5 = -0.7616 * b5 - w * 0.0168980;
+        out[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.08;
+        b6 = w * 0.115926;
       }
     }
 
-    // Layer 1: Deep slow ocean swell (rolls in every ~10s)
-    const src1 = ctx.createBufferSource();
-    src1.buffer = buf; src1.loop = true;
-    const lp1 = ctx.createBiquadFilter();
-    lp1.type = 'lowpass'; lp1.frequency.value = 340; lp1.Q.value = 0.7;
-    const g1 = ctx.createGain(); g1.gain.value = 0.42;
-
-    const lfo1 = ctx.createOscillator();
-    lfo1.type = 'sine'; lfo1.frequency.value = 0.095; // ~10.5s per wave
-    const lfo1FreqGain = ctx.createGain(); lfo1FreqGain.gain.value = 230;
-    const lfo1AmpGain = ctx.createGain(); lfo1AmpGain.gain.value = 0.24;
-    lfo1.connect(lfo1FreqGain).connect(lp1.frequency);
-    lfo1.connect(lfo1AmpGain).connect(g1.gain);
-
-    // Layer 2: Soft shore foam / gentle receding hiss (~14s cycle, offset)
-    const src2 = ctx.createBufferSource();
-    src2.buffer = buf; src2.loop = true;
-    const bp2 = ctx.createBiquadFilter();
-    bp2.type = 'bandpass'; bp2.frequency.value = 720; bp2.Q.value = 0.6;
-    const g2 = ctx.createGain(); g2.gain.value = 0.14;
-
-    const lfo2 = ctx.createOscillator();
-    lfo2.type = 'sine'; lfo2.frequency.value = 0.068; // ~14.7s
-    const lfo2Amp = ctx.createGain(); lfo2Amp.gain.value = 0.11;
-    lfo2.connect(lfo2Amp).connect(g2.gain);
-
     master = ctx.createGain();
     master.gain.value = 0.0001;
-
-    src1.connect(lp1).connect(g1).connect(master);
-    src2.connect(bp2).connect(g2).connect(master);
     master.connect(ctx.destination);
 
-    src1.start(); src2.start(0, 3.5);
-    lfo1.start(); lfo2.start();
+    // Very quiet distant deep-sea floor rumble so silence between waves feels natural
+    const bedSrc = ctx.createBufferSource();
+    bedSrc.buffer = noiseBuf; bedSrc.loop = true;
+    const bedLp = ctx.createBiquadFilter();
+    bedLp.type = 'lowpass'; bedLp.frequency.value = 150;
+    bedGain = ctx.createGain();
+    bedGain.gain.value = 0.18;
+    bedSrc.connect(bedLp).connect(bedGain).connect(master);
+    bedSrc.start();
+  }
+
+  function triggerWave() {
+    if (!active || !ctx) return;
+    const now = ctx.currentTime;
+    // Slight natural variation per wave (duration 7.5s to 10.5s)
+    const rise = 2.0 + Math.random() * 1.0;     // water rolling in
+    const crest = 0.9 + Math.random() * 0.5;    // breaking foam crest
+    const wash = 4.2 + Math.random() * 1.8;     // long gentle shore recede
+    const total = rise + crest + wash;
+    const intensity = 0.55 + Math.random() * 0.35;
+
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuf;
+    src.loop = true;
+
+    // Low-pass filter sweeps UP when the wave breaks, then slowly closes as water pulls back
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 0.5;
+    lp.frequency.setValueAtTime(140, now);
+    lp.frequency.exponentialRampToValueAtTime(520, now + rise);
+    lp.frequency.exponentialRampToValueAtTime(1350 * intensity + 450, now + rise + crest * 0.5);
+    lp.frequency.exponentialRampToValueAtTime(620, now + rise + crest + 0.8);
+    lp.frequency.exponentialRampToValueAtTime(150, now + total);
+
+    // High-pass gently removes muddy rumble during the foam wash
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(65, now);
+
+    // Asymmetric wave volume envelope (slow swell -> foam crest -> long soft fade)
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.001, now);
+    env.gain.linearRampToValueAtTime(0.32 * intensity, now + rise);
+    env.gain.linearRampToValueAtTime(0.72 * intensity, now + rise + crest * 0.55);
+    env.gain.exponentialRampToValueAtTime(0.26 * intensity, now + rise + crest + 1.2);
+    env.gain.exponentialRampToValueAtTime(0.001, now + total);
+
+    src.connect(hp).connect(lp).connect(env).connect(master);
+    src.start(now, Math.random() * 3);
+    src.stop(now + total + 0.2);
+
+    // Schedule next overlapping wave naturally (6.5s - 9.5s later)
+    const nextInMs = (6.2 + Math.random() * 3.2) * 1000;
+    waveTimeout = setTimeout(triggerWave, nextInMs);
   }
 
   function start() {
     init();
     if (ctx.state === 'suspended') ctx.resume();
+    active = true;
     master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.setTargetAtTime(0.55, ctx.currentTime, 1.2);
-    runningAudio = true;
+    master.gain.setTargetAtTime(0.75, ctx.currentTime, 0.8);
+    clearTimeout(waveTimeout);
+    triggerWave();
   }
 
   function stop() {
+    active = false;
+    clearTimeout(waveTimeout);
     if (!ctx || !master) return;
     master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.8);
-    runningAudio = false;
+    master.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.7);
   }
 
   function chime() {
@@ -1169,7 +1203,7 @@ const OceanAudio = (() => {
     osc.stop(ctx.currentTime + 2.5);
   }
 
-  return { start, stop, chime, isRunning: () => runningAudio };
+  return { start, stop, chime };
 })();
 
 const presets = [
