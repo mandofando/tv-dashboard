@@ -201,25 +201,93 @@
     gap: 1.4vw;
   }
 
-  .clock-card { justify-content: center; }
+  .clock-card { justify-content: space-between; }
   .clock-time {
-    font-size: 8.2vh;
+    font-size: 6.8vh;
     font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
   .clock-sec {
-    font-size: 3.2vh;
+    font-size: 2.6vh;
     color: var(--accent);
     font-weight: 500;
     margin-left: 0.4vw;
   }
   .clock-date {
-    font-size: 2.1vh;
+    font-size: 1.75vh;
     color: var(--muted);
-    margin-top: 0.9vh;
+    margin-top: 0.45vh;
     font-weight: 500;
+  }
+
+  /* Spotify Now Playing mini-bar inside Clock card */
+  .spotify-bar {
+    margin-top: 0.8vh;
+    background: rgba(29, 185, 84, 0.10);
+    border: 1px solid rgba(29, 185, 84, 0.28);
+    border-radius: 12px;
+    padding: 0.7vh 0.7vw;
+    display: flex;
+    align-items: center;
+    gap: 0.65vw;
+    cursor: pointer;
+  }
+  .sp-art {
+    width: 4.8vh;
+    height: 4.8vh;
+    border-radius: 7px;
+    object-fit: cover;
+    background: rgba(29, 185, 84, 0.20);
+    flex-shrink: 0;
+  }
+  .sp-info { flex: 1; min-width: 0; }
+  .sp-title {
+    font-size: 1.55vh;
+    font-weight: 700;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sp-artist {
+    font-size: 1.3vh;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sp-prog-bg {
+    height: 3px;
+    background: rgba(255,255,255,0.14);
+    border-radius: 99px;
+    margin-top: 0.4vh;
+    overflow: hidden;
+  }
+  .sp-prog-fill {
+    height: 100%;
+    width: 0%;
+    background: #1db954;
+    transition: width 1s linear;
+  }
+  .sp-ctrl {
+    display: flex;
+    gap: 0.3vw;
+  }
+  .sp-btn {
+    background: rgba(255,255,255,0.09);
+    border: 2px solid transparent;
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.45vh 0.55vw;
+    font-size: 1.4vh;
+    cursor: pointer;
+  }
+  .sp-btn.focused, .sp-btn:focus {
+    outline: none;
+    border-color: #1db954;
+    background: rgba(29, 185, 84, 0.35);
   }
 
   /* Weather */
@@ -614,9 +682,23 @@
 <div id="stage">
   <div class="row-top">
     <div class="card clock-card">
-      <div class="section-label"><span>JENA · MEZ</span><span id="sync-dot">● LIVE</span></div>
-      <div><span class="clock-time" id="clock-hm">--:--</span><span class="clock-sec" id="clock-s">--</span></div>
-      <div class="clock-date" id="clock-date">Lade Datum…</div>
+      <div>
+        <div class="section-label"><span>JENA · MEZ</span><span id="sync-dot">● LIVE</span></div>
+        <div><span class="clock-time" id="clock-hm">--:--</span><span class="clock-sec" id="clock-s">--</span></div>
+        <div class="clock-date" id="clock-date">Lade Datum…</div>
+      </div>
+      <div class="spotify-bar" id="spotify-bar">
+        <img class="sp-art" id="sp-art" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231db954'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E" alt="Spotify">
+        <div class="sp-info">
+          <div class="sp-title" id="sp-title">Spotify verbinden</div>
+          <div class="sp-artist" id="sp-artist">Tippen für Live-Song &amp; Cover</div>
+          <div class="sp-prog-bg"><div class="sp-prog-fill" id="sp-prog"></div></div>
+        </div>
+        <div class="sp-ctrl">
+          <button class="sp-btn btn" data-action="sp-play" id="btn-sp-play">⏯</button>
+          <button class="sp-btn btn" data-action="sp-next">⏭</button>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -1081,129 +1163,167 @@ setInterval(() => {
   renderNewsCol('news-welt', newsPools.welt);
 }, 14000);
 
-// ==================== 6. REALISTIC ROLLING OCEAN WAVES (WEB AUDIO) + POMODORO ====================
+// ==================== 6. REAL OCEAN WAVES MP3 + POMODORO + SPOTIFY CONNECT ====================
 const OceanAudio = (() => {
-  let ctx = null, master = null, noiseBuf = null, bedGain = null, active = false, waveTimeout = null;
-
-  function init() {
-    if (ctx) return;
-    const AC = window.AudioContext || window.webkitAudioContext;
-    ctx = new AC();
-
-    // Create warm pink-brown noise buffer (6s) for natural water texture
-    const sr = ctx.sampleRate;
-    const len = sr * 6;
-    noiseBuf = ctx.createBuffer(2, len, sr);
-    for (let ch = 0; ch < 2; ch++) {
-      const out = noiseBuf.getChannelData(ch);
-      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-      for (let i = 0; i < len; i++) {
-        const w = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + w * 0.0555179;
-        b1 = 0.99332 * b1 + w * 0.0750759;
-        b2 = 0.96900 * b2 + w * 0.1538520;
-        b3 = 0.86650 * b3 + w * 0.3104856;
-        b4 = 0.55000 * b4 + w * 0.5329522;
-        b5 = -0.7616 * b5 - w * 0.0168980;
-        out[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.08;
-        b6 = w * 0.115926;
-      }
+  let audioEl = null, fadeTimer = null;
+  function getAudio() {
+    if (!audioEl) {
+      audioEl = new Audio();
+      audioEl.loop = true;
+      audioEl.volume = 0;
+      // Load real beach wave recording from local file or GitHub CDN
+      audioEl.src = location.protocol === 'file:'
+        ? './ocean.mp3'
+        : 'https://cdn.jsdelivr.net/gh/mandofando/tv-dashboard@main/app/ocean.mp3';
+      audioEl.onerror = () => {
+        if (!audioEl.src.includes('raw.githubusercontent.com')) {
+          audioEl.src = 'https://raw.githubusercontent.com/mandofando/tv-dashboard/main/app/ocean.mp3';
+        }
+      };
     }
-
-    master = ctx.createGain();
-    master.gain.value = 0.0001;
-    master.connect(ctx.destination);
-
-    // Very quiet distant deep-sea floor rumble so silence between waves feels natural
-    const bedSrc = ctx.createBufferSource();
-    bedSrc.buffer = noiseBuf; bedSrc.loop = true;
-    const bedLp = ctx.createBiquadFilter();
-    bedLp.type = 'lowpass'; bedLp.frequency.value = 150;
-    bedGain = ctx.createGain();
-    bedGain.gain.value = 0.18;
-    bedSrc.connect(bedLp).connect(bedGain).connect(master);
-    bedSrc.start();
+    return audioEl;
   }
-
-  function triggerWave() {
-    if (!active || !ctx) return;
-    const now = ctx.currentTime;
-    // Slight natural variation per wave (duration 7.5s to 10.5s)
-    const rise = 2.0 + Math.random() * 1.0;     // water rolling in
-    const crest = 0.9 + Math.random() * 0.5;    // breaking foam crest
-    const wash = 4.2 + Math.random() * 1.8;     // long gentle shore recede
-    const total = rise + crest + wash;
-    const intensity = 0.55 + Math.random() * 0.35;
-
-    const src = ctx.createBufferSource();
-    src.buffer = noiseBuf;
-    src.loop = true;
-
-    // Low-pass filter sweeps UP when the wave breaks, then slowly closes as water pulls back
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.Q.value = 0.5;
-    lp.frequency.setValueAtTime(140, now);
-    lp.frequency.exponentialRampToValueAtTime(520, now + rise);
-    lp.frequency.exponentialRampToValueAtTime(1350 * intensity + 450, now + rise + crest * 0.5);
-    lp.frequency.exponentialRampToValueAtTime(620, now + rise + crest + 0.8);
-    lp.frequency.exponentialRampToValueAtTime(150, now + total);
-
-    // High-pass gently removes muddy rumble during the foam wash
-    const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.setValueAtTime(65, now);
-
-    // Asymmetric wave volume envelope (slow swell -> foam crest -> long soft fade)
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.001, now);
-    env.gain.linearRampToValueAtTime(0.32 * intensity, now + rise);
-    env.gain.linearRampToValueAtTime(0.72 * intensity, now + rise + crest * 0.55);
-    env.gain.exponentialRampToValueAtTime(0.26 * intensity, now + rise + crest + 1.2);
-    env.gain.exponentialRampToValueAtTime(0.001, now + total);
-
-    src.connect(hp).connect(lp).connect(env).connect(master);
-    src.start(now, Math.random() * 3);
-    src.stop(now + total + 0.2);
-
-    // Schedule next overlapping wave naturally (6.5s - 9.5s later)
-    const nextInMs = (6.2 + Math.random() * 3.2) * 1000;
-    waveTimeout = setTimeout(triggerWave, nextInMs);
+  function fadeTo(target, onDone) {
+    clearInterval(fadeTimer);
+    const a = getAudio();
+    fadeTimer = setInterval(() => {
+      const diff = target - a.volume;
+      if (Math.abs(diff) < 0.03) {
+        a.volume = Math.max(0, Math.min(1, target));
+        clearInterval(fadeTimer);
+        if (onDone) onDone();
+      } else {
+        a.volume = Math.max(0, Math.min(1, a.volume + Math.sign(diff) * 0.04));
+      }
+    }, 60);
   }
-
   function start() {
-    init();
-    if (ctx.state === 'suspended') ctx.resume();
-    active = true;
-    master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.setTargetAtTime(0.75, ctx.currentTime, 0.8);
-    clearTimeout(waveTimeout);
-    triggerWave();
+    const a = getAudio();
+    a.play().then(() => fadeTo(0.75)).catch(() => {});
   }
-
   function stop() {
-    active = false;
-    clearTimeout(waveTimeout);
-    if (!ctx || !master) return;
-    master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.7);
+    if (!audioEl) return;
+    fadeTo(0, () => { try { audioEl.pause(); } catch (e) {} });
   }
-
   function chime() {
-    init();
-    if (ctx.state === 'suspended') ctx.resume();
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(528, ctx.currentTime);
-    g.gain.setValueAtTime(0.22, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.4);
-    osc.connect(g).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 2.5);
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AC();
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(528, ctx.currentTime);
+      g.gain.setValueAtTime(0.22, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.4);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + 2.5);
+    } catch (e) {}
+  }
+  return { start, stop, chime };
+})();
+
+// Spotify Connect (uses credentials stored privately in localStorage — never in GitHub!)
+const SpotifyConnect = (() => {
+  let accessToken = localStorage.getItem('sp_access_token') || '';
+  let refreshToken = localStorage.getItem('sp_refresh_token') || '';
+  let clientId = localStorage.getItem('sp_client_id') || '';
+  let isPlaying = false;
+
+  // Allow one-time import via URL hash: #sp=CLIENT_ID|REFRESH_TOKEN
+  if (location.hash && location.hash.startsWith('#sp=')) {
+    const parts = decodeURIComponent(location.hash.slice(4)).split('|');
+    if (parts.length === 2) {
+      clientId = parts[0]; refreshToken = parts[1];
+      localStorage.setItem('sp_client_id', clientId);
+      localStorage.setItem('sp_refresh_token', refreshToken);
+      history.replaceState(null, '', location.pathname);
+    }
   }
 
-  return { start, stop, chime };
+  async function refresh() {
+    if (!clientId || !refreshToken) return false;
+    try {
+      const r = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken,
+          client_id: clientId
+        })
+      });
+      const j = await r.json();
+      if (j.access_token) {
+        accessToken = j.access_token;
+        localStorage.setItem('sp_access_token', accessToken);
+        if (j.refresh_token) {
+          refreshToken = j.refresh_token;
+          localStorage.setItem('sp_refresh_token', refreshToken);
+        }
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  async function api(path, method = 'GET') {
+    if (!accessToken && !(await refresh())) return null;
+    let r = await fetch('https://api.spotify.com/v1' + path, {
+      method,
+      headers: { Authorization: 'Bearer ' + accessToken }
+    });
+    if (r.status === 401 && await refresh()) {
+      r = await fetch('https://api.spotify.com/v1' + path, {
+        method,
+        headers: { Authorization: 'Bearer ' + accessToken }
+      });
+    }
+    if (r.status === 204 || !r.ok) return null;
+    return await r.json().catch(() => null);
+  }
+
+  async function poll() {
+    if (!clientId || !refreshToken) return;
+    const d = await api('/me/player');
+    if (!d || !d.item) {
+      document.getElementById('sp-title').textContent = 'Spotify bereit';
+      document.getElementById('sp-artist').textContent = 'Nichts läuft gerade';
+      document.getElementById('sp-prog').style.width = '0%';
+      return;
+    }
+    isPlaying = !!d.is_playing;
+    document.getElementById('sp-title').textContent = d.item.name;
+    document.getElementById('sp-artist').textContent = (d.item.artists || []).map(a => a.name).join(', ');
+    const img = d.item.album?.images?.[1]?.url || d.item.album?.images?.[0]?.url;
+    if (img) document.getElementById('sp-art').src = img;
+    const pct = d.item.duration_ms ? Math.min(100, (d.progress_ms / d.item.duration_ms) * 100) : 0;
+    document.getElementById('sp-prog').style.width = pct + '%';
+    document.getElementById('btn-sp-play').textContent = isPlaying ? '⏸' : '▶';
+  }
+
+  async function togglePlay() {
+    if (!clientId || !refreshToken) {
+      const cid = prompt('Spotify Client ID eingeben (aus developer.spotify.com):', clientId || '');
+      const rt = cid ? prompt('Spotify Refresh Token eingeben:', refreshToken || '') : '';
+      if (cid && rt) {
+        clientId = cid.trim(); refreshToken = rt.trim();
+        localStorage.setItem('sp_client_id', clientId);
+        localStorage.setItem('sp_refresh_token', refreshToken);
+        poll();
+      }
+      return;
+    }
+    await api(isPlaying ? '/me/player/pause' : '/me/player/play', 'PUT');
+    setTimeout(poll, 400);
+  }
+
+  async function nextTrack() {
+    if (!clientId || !refreshToken) return;
+    await api('/me/player/next', 'POST');
+    setTimeout(poll, 500);
+  }
+
+  setInterval(poll, 5000);
+  setTimeout(poll, 1200);
+  return { poll, togglePlay, nextTrack };
 })();
 
 const presets = [
@@ -1271,6 +1391,8 @@ function triggerBtn(btn) {
   else if (act === 'sound') toggleSound();
   else if (act === 'preset') cyclePreset();
   else if (act === 'ambient') toggleAmbient();
+  else if (act === 'sp-play') SpotifyConnect.togglePlay();
+  else if (act === 'sp-next') SpotifyConnect.nextTrack();
 }
 buttons.forEach((b, i) => b.addEventListener('click', () => { focusIdx = i; updateFocus(); triggerBtn(b); }));
 
