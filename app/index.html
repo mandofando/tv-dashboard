@@ -6,9 +6,9 @@
 <title>Ege TV Dashboard</title>
 <style>
   :root {
-    --bg: #07090f;
-    --card: rgba(18, 24, 38, 0.86);
-    --card-border: rgba(148, 163, 184, 0.14);
+    --bg: #03050a;
+    --card: rgba(10, 14, 26, 0.72);
+    --card-border: rgba(148, 163, 184, 0.16);
     --text: #f1f5f9;
     --muted: #94a3b8;
     --accent: #38bdf8;
@@ -16,7 +16,6 @@
     --green: #34d399;
     --red: #f87171;
     --gala: #eab308;
-    --gala-red: #dc2626;
     --rbl: #ef4444;
     --focus-ring: #38bdf8;
   }
@@ -25,20 +24,106 @@
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background:
-      radial-gradient(ellipse 80% 60% at 15% 10%, rgba(56, 189, 248, 0.10), transparent 60%),
-      radial-gradient(ellipse 70% 50% at 85% 90%, rgba(234, 179, 8, 0.08), transparent 60%),
-      var(--bg);
+    background: var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Subtle pixel-shift wrapper for Mini-LED/OLED longevity */
-  #stage {
+  /* ==================== SPACE + JUPITER SYSTEM BACKGROUND ==================== */
+  #space-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 90% 70% at 72% 46%, rgba(180, 105, 55, 0.16), transparent 62%),
+      radial-gradient(ellipse 65% 55% at 18% 22%, rgba(56, 120, 220, 0.13), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(30, 27, 75, 0.25), transparent 65%),
+      #02040a;
+  }
+  #starfield {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
-    padding: 2.4vh 2.6vw;
+  }
+  .jupiter-system {
+    position: absolute;
+    right: 6vw;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 58vh;
+    height: 58vh;
+    pointer-events: none;
+    opacity: 0.88;
+    transition: all 0.8s ease;
+  }
+  body.ambient .jupiter-system {
+    right: 50%;
+    transform: translate(50%, -50%) scale(1.18);
+    opacity: 0.96;
+  }
+
+  /* Faint Jupiter gossamer ring */
+  .j-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 155%;
+    height: 30%;
+    border: 1.5px solid rgba(226, 196, 155, 0.16);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    box-shadow: 0 0 18px rgba(226, 196, 155, 0.08);
+  }
+
+  /* Jupiter SVG sphere */
+  .jupiter-globe {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44vh;
+    height: 44vh;
+    transform: translate(-50%, -50%) rotate(-8deg);
+    border-radius: 50%;
+    box-shadow:
+      0 0 70px rgba(217, 138, 78, 0.22),
+      0 0 140px rgba(180, 100, 50, 0.12);
+    overflow: hidden;
+  }
+
+  /* Galilean moon orbits */
+  .orbit {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border: 1px dashed rgba(148, 163, 184, 0.13);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+  }
+  .orbit-io       { width: 62vh; height: 15vh; }
+  .orbit-europa   { width: 76vh; height: 19vh; }
+  .orbit-ganymede { width: 92vh; height: 24vh; }
+  .orbit-callisto { width: 112vh; height: 30vh; }
+
+  .moon-dot {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .moon-io       { width: 10px; height: 10px; background: radial-gradient(circle at 35% 35%, #fef08a, #ca8a04); box-shadow: 0 0 10px rgba(250, 204, 21, 0.8); }
+  .moon-europa   { width: 9px;  height: 9px;  background: radial-gradient(circle at 35% 35%, #e0f2fe, #7dd3fc); box-shadow: 0 0 10px rgba(125, 211, 252, 0.85); }
+  .moon-ganymede { width: 13px; height: 13px; background: radial-gradient(circle at 35% 35%, #e2e8f0, #64748b); box-shadow: 0 0 10px rgba(203, 213, 225, 0.65); }
+  .moon-callisto { width: 11px; height: 11px; background: radial-gradient(circle at 35% 35%, #cbd5e1, #475569); box-shadow: 0 0 8px rgba(148, 163, 184, 0.5); }
+
+  /* ==================== FOREGROUND DASHBOARD ==================== */
+  #stage {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    padding: 2.3vh 2.5vw;
     display: grid;
     grid-template-rows: 22vh 43vh 28vh;
     gap: 1.8vh;
@@ -49,11 +134,13 @@
     background: var(--card);
     border: 1px solid var(--card-border);
     border-radius: 18px;
-    padding: 1.6vh 1.6vw;
-    backdrop-filter: blur(12px);
+    padding: 1.5vh 1.5vw;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
   }
 
   .section-label {
@@ -62,22 +149,20 @@
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 1vh;
+    margin-bottom: 0.9vh;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
 
-  /* ROW 1: Clock + Weather + Pomodoro */
+  /* ROW 1 */
   .row-top {
     display: grid;
     grid-template-columns: 1.15fr 1.55fr 1.25fr;
     gap: 1.4vw;
   }
 
-  .clock-card {
-    justify-content: center;
-  }
+  .clock-card { justify-content: center; }
   .clock-time {
     font-size: 8.2vh;
     font-weight: 700;
@@ -94,7 +179,7 @@
   .clock-date {
     font-size: 2.1vh;
     color: var(--muted);
-    margin-top: 1vh;
+    margin-top: 0.9vh;
     font-weight: 500;
   }
 
@@ -106,39 +191,31 @@
     flex: 1;
     gap: 1.2vw;
   }
-  .weather-now {
-    display: flex;
-    align-items: center;
-    gap: 1vw;
-  }
-  .weather-icon { font-size: 5.8vh; line-height: 1; }
+  .weather-now { display: flex; align-items: center; gap: 1vw; }
+  .weather-icon { font-size: 5.6vh; line-height: 1; }
   .weather-temp {
     font-size: 5.4vh;
     font-weight: 700;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
-  .weather-desc {
-    font-size: 1.65vh;
-    color: var(--muted);
-    margin-top: 0.4vh;
-  }
+  .weather-desc { font-size: 1.6vh; color: var(--muted); margin-top: 0.4vh; }
   .weather-days {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.55vw;
+    gap: 0.5vw;
     flex: 1;
   }
   .w-day {
-    background: rgba(255,255,255,0.035);
+    background: rgba(255,255,255,0.045);
     border-radius: 12px;
-    padding: 0.9vh 0.4vw;
+    padding: 0.85vh 0.35vw;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.4vh;
+    gap: 0.35vh;
   }
   .w-day-name { font-size: 1.35vh; color: var(--muted); font-weight: 600; }
   .w-day-ico { font-size: 2.4vh; }
@@ -160,19 +237,14 @@
     letter-spacing: -0.02em;
     line-height: 1;
   }
-  .pomo-status {
-    font-size: 1.45vh;
-    color: var(--accent);
-    margin-top: 0.5vh;
-    font-weight: 600;
-  }
+  .pomo-status { font-size: 1.45vh; color: var(--accent); margin-top: 0.5vh; font-weight: 600; }
   .pomo-btns {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.7vh 0.5vw;
   }
   .btn {
-    background: rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.08);
     border: 2px solid transparent;
     color: var(--text);
     border-radius: 10px;
@@ -183,26 +255,20 @@
     transition: all 0.15s ease;
     white-space: nowrap;
   }
-  .btn.active {
-    background: rgba(56, 189, 248, 0.22);
-    border-color: rgba(56, 189, 248, 0.5);
-    color: #fff;
-  }
   .btn.focused, .btn:focus {
     outline: none;
     border-color: var(--focus-ring);
-    background: rgba(56, 189, 248, 0.30);
+    background: rgba(56, 189, 248, 0.32);
     transform: scale(1.04);
-    box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.38);
   }
 
-  /* ROW 2: Markets (left) + Sports (right) */
+  /* ROW 2 */
   .row-mid {
     display: grid;
     grid-template-columns: 1.75fr 1.25fr;
     gap: 1.4vw;
   }
-
   .markets-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -211,35 +277,23 @@
     flex: 1;
   }
   .m-tile {
-    background: rgba(255,255,255,0.035);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px;
     padding: 1.3vh 1vw;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
   }
-  .m-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .m-name {
-    font-size: 1.65vh;
-    font-weight: 700;
-    color: #e2e8f0;
-  }
-  .m-sub {
-    font-size: 1.25vh;
-    color: var(--muted);
-    font-weight: 600;
-  }
+  .m-head { display: flex; justify-content: space-between; align-items: center; }
+  .m-name { font-size: 1.65vh; font-weight: 700; color: #e2e8f0; }
+  .m-sub { font-size: 1.25vh; color: var(--muted); font-weight: 600; }
   .m-price {
     font-size: 3.1vh;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
-    margin: 0.4vh 0;
+    margin: 0.35vh 0;
   }
   .m-chg {
     font-size: 1.45vh;
@@ -252,9 +306,9 @@
     width: fit-content;
     font-variant-numeric: tabular-nums;
   }
-  .up { color: var(--green); background: rgba(52, 211, 153, 0.14); }
-  .down { color: var(--red); background: rgba(248, 113, 113, 0.14); }
-  .flat { color: var(--muted); background: rgba(148, 163, 184, 0.14); }
+  .up { color: var(--green); background: rgba(52, 211, 153, 0.16); }
+  .down { color: var(--red); background: rgba(248, 113, 113, 0.16); }
+  .flat { color: var(--muted); background: rgba(148, 163, 184, 0.16); }
 
   /* Sports */
   .sports-split {
@@ -264,49 +318,31 @@
     flex: 1;
   }
   .club-card {
-    background: rgba(255,255,255,0.035);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 14px;
-    padding: 1.4vh 1.1vw;
+    padding: 1.35vh 1.05vw;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    position: relative;
-    overflow: hidden;
   }
   .club-card.gala { border-top: 3px solid var(--gala); }
   .club-card.rbl { border-top: 3px solid var(--rbl); }
-  .club-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.6vw;
-  }
-  .club-title {
-    display: flex;
-    align-items: center;
-    gap: 0.6vw;
-  }
-  .club-logo {
-    width: 4.2vh;
-    height: 4.2vh;
-    object-fit: contain;
-  }
-  .club-name {
-    font-size: 2.1vh;
-    font-weight: 800;
-  }
+  .club-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5vw; }
+  .club-title { display: flex; align-items: center; gap: 0.55vw; }
+  .club-logo { width: 4.2vh; height: 4.2vh; object-fit: contain; }
+  .club-name { font-size: 2.05vh; font-weight: 800; }
   .club-rank {
-    font-size: 1.5vh;
+    font-size: 1.45vh;
     font-weight: 700;
     padding: 0.35vh 0.65vw;
     border-radius: 999px;
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.10);
     color: var(--gold);
     white-space: nowrap;
   }
   .club-block {
-    background: rgba(0,0,0,0.22);
+    background: rgba(0,0,0,0.32);
     border-radius: 10px;
     padding: 1vh 0.8vw;
     margin-top: 0.8vh;
@@ -317,21 +353,12 @@
     text-transform: uppercase;
     color: var(--muted);
     font-weight: 700;
-    margin-bottom: 0.4vh;
+    margin-bottom: 0.35vh;
   }
-  .club-match {
-    font-size: 1.85vh;
-    font-weight: 700;
-    line-height: 1.25;
-  }
-  .club-meta {
-    font-size: 1.45vh;
-    color: var(--accent);
-    margin-top: 0.35vh;
-    font-weight: 600;
-  }
+  .club-match { font-size: 1.85vh; font-weight: 700; line-height: 1.25; }
+  .club-meta { font-size: 1.45vh; color: var(--accent); margin-top: 0.35vh; font-weight: 600; }
 
-  /* ROW 3: German News (Türkei | Deutschland | Wirtschaft & Welt) */
+  /* ROW 3: NEWS */
   .news-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -340,12 +367,12 @@
     overflow: hidden;
   }
   .news-col {
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.035);
     border-radius: 12px;
-    padding: 1.1vh 1vw;
+    padding: 1.05vh 1vw;
     display: flex;
     flex-direction: column;
-    gap: 0.8vh;
+    gap: 0.75vh;
     overflow: hidden;
   }
   .news-col-head {
@@ -361,7 +388,7 @@
   .news-col-head.de { color: #fbbf24; }
   .news-col-head.welt { color: #38bdf8; }
   .news-item {
-    font-size: 1.72vh;
+    font-size: 1.7vh;
     line-height: 1.32;
     color: #e2e8f0;
     display: -webkit-box;
@@ -369,28 +396,23 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     padding-bottom: 0.6vh;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
   }
   .news-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .news-time {
-    color: var(--muted);
-    font-size: 1.35vh;
-    font-weight: 600;
-    margin-right: 0.4vw;
-  }
+  .news-time { color: var(--muted); font-size: 1.35vh; font-weight: 600; margin-right: 0.4vw; }
 
   /* AMBIENT MODE */
-  body.ambient #stage > *:not(.ambient-overlay) { display: none; }
+  body.ambient #stage { opacity: 0; pointer-events: none; }
   .ambient-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: #000;
+    z-index: 10;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2.5vh;
-    z-index: 50;
+    gap: 2.2vh;
+    background: radial-gradient(circle at center, rgba(0,0,0,0.18), rgba(0,0,0,0.68));
   }
   body.ambient .ambient-overlay { display: flex; }
   .amb-clock {
@@ -399,30 +421,99 @@
     letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
     color: #f8fafc;
+    text-shadow: 0 8px 40px rgba(0,0,0,0.85);
     line-height: 1;
   }
   .amb-sub {
     font-size: 3.4vh;
-    color: var(--muted);
+    color: #e2e8f0;
     font-weight: 500;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.9);
   }
   .amb-pomo {
     font-size: 4.5vh;
     color: var(--accent);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.9);
   }
   .amb-hint {
     position: fixed;
     bottom: 3vh;
     font-size: 1.6vh;
-    color: rgba(148,163,184,0.45);
+    color: rgba(203, 213, 225, 0.55);
   }
 </style>
 </head>
 <body>
+
+<!-- SPACE & JUPITER SYSTEM BACKGROUND -->
+<div id="space-bg">
+  <canvas id="starfield"></canvas>
+  <div class="jupiter-system" id="jupiter-system">
+    <div class="orbit orbit-callisto"></div>
+    <div class="orbit orbit-ganymede"></div>
+    <div class="orbit orbit-europa"></div>
+    <div class="orbit orbit-io"></div>
+    <div class="j-ring"></div>
+
+    <!-- High-res procedural SVG Jupiter with atmospheric bands & Great Red Spot -->
+    <div class="jupiter-globe">
+      <svg viewBox="0 0 400 400" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="jClip"><circle cx="200" cy="200" r="200"/></clipPath>
+          <linearGradient id="jBands" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#4e4037"/>
+            <stop offset="10%"  stop-color="#8c735e"/>
+            <stop offset="18%"  stop-color="#d8c3a5"/>
+            <stop offset="25%"  stop-color="#a8643c"/>
+            <stop offset="32%"  stop-color="#e5d5bc"/>
+            <stop offset="40%"  stop-color="#c47d4e"/>
+            <stop offset="48%"  stop-color="#f0e4d0"/>
+            <stop offset="56%"  stop-color="#9e5332"/>
+            <stop offset="65%"  stop-color="#d7be9e"/>
+            <stop offset="74%"  stop-color="#8f5c3e"/>
+            <stop offset="84%"  stop-color="#bca48a"/>
+            <stop offset="93%"  stop-color="#6b5648"/>
+            <stop offset="100%" stop-color="#3a2f2a"/>
+          </linearGradient>
+          <radialGradient id="jShadow" cx="28%" cy="32%" r="76%">
+            <stop offset="0%"   stop-color="rgba(255,245,230,0.16)"/>
+            <stop offset="52%"  stop-color="rgba(0,0,0,0.06)"/>
+            <stop offset="78%"  stop-color="rgba(4,6,14,0.68)"/>
+            <stop offset="100%" stop-color="rgba(2,3,8,0.95)"/>
+          </radialGradient>
+          <radialGradient id="grs" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#c2492a"/>
+            <stop offset="60%"  stop-color="#9e371f"/>
+            <stop offset="100%" stop-color="rgba(158,55,31,0)"/>
+          </radialGradient>
+        </defs>
+        <g clip-path="url(#jClip)">
+          <rect width="400" height="400" fill="url(#jBands)"/>
+          <!-- Subtle turbulent cloud waves -->
+          <path d="M-20,105 Q100,92 210,108 T420,102 L420,122 Q300,130 190,118 T-20,124 Z" fill="rgba(255,245,230,0.22)"/>
+          <path d="M-20,162 Q120,175 230,158 T420,168 L420,185 Q280,178 160,190 T-20,178 Z" fill="rgba(120,52,25,0.25)"/>
+          <path d="M-20,235 Q110,222 240,240 T420,232 L420,255 Q290,262 170,248 T-20,256 Z" fill="rgba(245,230,205,0.20)"/>
+          <!-- Great Red Spot -->
+          <ellipse cx="238" cy="242" rx="42" ry="22" fill="url(#grs)" opacity="0.92"/>
+          <ellipse cx="238" cy="242" rx="24" ry="11" fill="rgba(230,115,75,0.35)"/>
+          <!-- Spherical day/night shadow terminator -->
+          <rect width="400" height="400" fill="url(#jShadow)"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Animated Galilean Moons -->
+    <div class="moon-dot moon-io" id="m-io"></div>
+    <div class="moon-dot moon-europa" id="m-europa"></div>
+    <div class="moon-dot moon-ganymede" id="m-ganymede"></div>
+    <div class="moon-dot moon-callisto" id="m-callisto"></div>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
 <div id="stage">
-  <!-- TOP ROW -->
   <div class="row-top">
     <div class="card clock-card">
       <div class="section-label"><span>JENA · MEZ</span><span id="sync-dot">● LIVE</span></div>
@@ -455,17 +546,16 @@
           <button class="btn focused" data-action="toggle" id="btn-toggle">▶ Start</button>
           <button class="btn" data-action="reset">↺ Reset</button>
           <button class="btn" data-action="preset">⏱ 25 / 50 / 5</button>
-          <button class="btn" data-action="ambient">🌙 Ambient</button>
+          <button class="btn" data-action="ambient">🪐 Ambient</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MIDDLE ROW -->
   <div class="row-mid">
     <div class="card">
       <div class="section-label"><span>MÄRKTE &amp; DEVISEN</span><span id="m-updated">Aktualisiere…</span></div>
-      <div class="markets-grid" id="markets-grid">
+      <div class="markets-grid">
         <div class="m-tile" id="t-eurtry"><div class="m-head"><span class="m-name">EUR / TRY</span><span class="m-sub">FX</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
         <div class="m-tile" id="t-usdtry"><div class="m-head"><span class="m-name">USD / TRY</span><span class="m-sub">FX</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
         <div class="m-tile" id="t-gold"><div class="m-head"><span class="m-name">Gold</span><span class="m-sub">€/g · 24K</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
@@ -480,7 +570,7 @@
     <div class="card">
       <div class="section-label"><span>FUSSBALL · LIVE-ÜBERBLICK</span><span>SÜPER LİG &amp; BUNDESLIGA</span></div>
       <div class="sports-split">
-        <div class="club-card gala" id="club-gala">
+        <div class="club-card gala">
           <div class="club-top">
             <div class="club-title">
               <img class="club-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/432.png" alt="GS">
@@ -499,7 +589,7 @@
           </div>
         </div>
 
-        <div class="club-card rbl" id="club-rbl">
+        <div class="club-card rbl">
           <div class="club-top">
             <div class="club-title">
               <img class="club-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/11420.png" alt="RBL">
@@ -521,9 +611,8 @@
     </div>
   </div>
 
-  <!-- BOTTOM ROW: NEWS -->
   <div class="card">
-    <div class="section-label"><span>NACHRICHTEN · TAGESSCHAU (DE)</span><span id="news-updated">Türkei · Deutschland · Wirtschaft &amp; Welt</span></div>
+    <div class="section-label"><span>NACHRICHTEN · TAGESSCHAU (DE)</span><span>Türkei · Deutschland · Wirtschaft &amp; Welt</span></div>
     <div class="news-grid">
       <div class="news-col">
         <div class="news-col-head tr">🇹🇷 Türkei</div>
@@ -550,6 +639,70 @@
 </div>
 
 <script>
+// ==================== 0. STARFIELD + ORBITING GALILEAN MOONS ====================
+(function initSpace() {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let w, h, stars = [];
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    stars = Array.from({ length: 190 }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.5 + 0.35,
+      base: Math.random() * 0.65 + 0.2,
+      phase: Math.random() * Math.PI * 2,
+      speed: Math.random() * 0.015 + 0.004,
+      tint: Math.random() > 0.8 ? '#bae6fd' : (Math.random() > 0.85 ? '#fde68a' : '#f8fafc')
+    }));
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const moons = [
+    { el: document.getElementById('m-io'),       rx: 31, ry: 7.5,  speed: 0.00045, phase: 0.4 },
+    { el: document.getElementById('m-europa'),   rx: 38, ry: 9.5,  speed: 0.00028, phase: 2.1 },
+    { el: document.getElementById('m-ganymede'), rx: 46, ry: 12.0, speed: 0.00018, phase: 4.0 },
+    { el: document.getElementById('m-callisto'), rx: 56, ry: 15.0, speed: 0.00011, phase: 5.5 }
+  ];
+  const tilt = -12 * Math.PI / 180;
+  const cosT = Math.cos(tilt), sinT = Math.sin(tilt);
+
+  function frame(ts) {
+    ctx.clearRect(0, 0, w, h);
+    for (const s of stars) {
+      s.phase += s.speed;
+      ctx.globalAlpha = s.base + Math.sin(s.phase) * 0.22;
+      ctx.fillStyle = s.tint;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Position Galilean moons along tilted ellipses around Jupiter center
+    const vh = window.innerHeight / 100;
+    const sysEl = document.getElementById('jupiter-system');
+    const cx = sysEl.clientWidth / 2;
+    const cy = sysEl.clientHeight / 2;
+    for (const m of moons) {
+      const a = m.phase + ts * m.speed;
+      const ox = Math.cos(a) * m.rx * vh;
+      const oy = Math.sin(a) * m.ry * vh;
+      const rx = ox * cosT - oy * sinT;
+      const ry = ox * sinT + oy * cosT;
+      m.el.style.left = `${cx + rx}px`;
+      m.el.style.top = `${cy + ry}px`;
+      // Hide moon behind Jupiter on the back half of orbit
+      m.el.style.zIndex = Math.sin(a) > 0 ? 5 : 0;
+      m.el.style.opacity = Math.sin(a) > -0.1 ? 0.95 : 0.35;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
 // ==================== 1. CLOCK ====================
 const DAYS_DE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const DAYS_SHORT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
@@ -563,8 +716,7 @@ function updateClock() {
   document.getElementById('clock-hm').textContent = `${hh}:${mm}`;
   document.getElementById('clock-s').textContent = ss;
   document.getElementById('amb-clock').textContent = `${hh}:${mm}`;
-  const dateStr = `${DAYS_DE[now.getDay()]}, ${now.getDate()}. ${MONTHS_DE[now.getMonth()]} ${now.getFullYear()}`;
-  document.getElementById('clock-date').textContent = dateStr;
+  document.getElementById('clock-date').textContent = `${DAYS_DE[now.getDay()]}, ${now.getDate()}. ${MONTHS_DE[now.getMonth()]} ${now.getFullYear()}`;
 }
 updateClock();
 setInterval(updateClock, 1000);
@@ -592,12 +744,10 @@ function wmoInfo(code) {
   return ['⛈️', 'Gewitter'];
 }
 
-let lastWeatherSummary = 'Jena';
 async function loadWeather() {
   try {
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=50.9271&longitude=11.5892&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Berlin&forecast_days=6';
-    const r = await fetch(url);
-    const d = await r.json();
+    const d = await (await fetch(url)).json();
     const c = d.current;
     const [ico, desc] = wmoInfo(c.weather_code);
     const temp = Math.round(c.temperature_2m);
@@ -605,8 +755,7 @@ async function loadWeather() {
     document.getElementById('w-temp').textContent = `${temp}°`;
     document.getElementById('w-desc').textContent = `${desc} · gefühlt ${Math.round(c.apparent_temperature)}°`;
     document.getElementById('w-extra').textContent = `Wind ${Math.round(c.wind_speed_10m)} km/h · ${c.relative_humidity_2m}%`;
-    lastWeatherSummary = `${ico} Jena ${temp}° · ${desc}`;
-    document.getElementById('amb-sub').textContent = lastWeatherSummary;
+    document.getElementById('amb-sub').textContent = `${ico} Jena ${temp}° · ${desc}`;
 
     const daysEl = document.getElementById('w-days');
     daysEl.innerHTML = '';
@@ -639,12 +788,28 @@ function setTile(id, priceText, pct) {
 async function fetchYahooQuote(symbol) {
   const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
   const r = await fetch(`https://api.cors.lol/?url=${encodeURIComponent(target)}`);
+  if (!r.ok) throw new Error('proxy err');
   const j = await r.json();
   const meta = j.chart.result[0].meta;
   const price = meta.regularMarketPrice;
   const prev = meta.chartPreviousClose || meta.previousClose;
   const pct = prev ? ((price - prev) / prev) * 100 : null;
-  return { price, pct, currency: meta.currency };
+  return { price, pct };
+}
+
+async function loadMarketsSnapshot() {
+  const urls = [
+    'https://raw.githubusercontent.com/mandofando/tv-dashboard/main/app/markets.json?t=' + Date.now(),
+    'https://cdn.jsdelivr.net/gh/mandofando/tv-dashboard@main/app/markets.json?t=' + Date.now(),
+    './markets.json?t=' + Date.now()
+  ];
+  for (const u of urls) {
+    try {
+      const r = await fetch(u);
+      if (r.ok) return await r.json();
+    } catch (e) {}
+  }
+  return {};
 }
 
 async function loadMarkets() {
@@ -652,52 +817,39 @@ async function loadMarkets() {
   try {
     const fx = await (await fetch('https://open.er-api.com/v6/latest/EUR')).json();
     if (fx && fx.rates) {
-      const eurTry = fx.rates.TRY;
-      const usdTry = fx.rates.TRY / fx.rates.USD;
-      setTile('t-eurtry', `${eurTry.toFixed(2)} ₺`, null);
-      setTile('t-usdtry', `${usdTry.toFixed(2)} ₺`, null);
+      setTile('t-eurtry', `${fx.rates.TRY.toFixed(2)} ₺`, null);
+      setTile('t-usdtry', `${(fx.rates.TRY / fx.rates.USD).toFixed(2)} ₺`, null);
     }
   } catch (e) {}
 
-  // 2. BTC + Gold (EUR/g from PAXG troy oz / 31.1035)
+  // 2. BTC + Gold
   try {
     const cg = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,pax-gold&vs_currencies=usd,eur&include_24hr_change=true')).json();
-    if (cg.bitcoin) {
-      setTile('t-btc', `$${Math.round(cg.bitcoin.usd).toLocaleString('de-DE')}`, cg.bitcoin.usd_24h_change);
-    }
-    if (cg['pax-gold']) {
-      const eurPerGram = cg['pax-gold'].eur / 31.1034768;
-      setTile('t-gold', `€${eurPerGram.toFixed(1)}/g`, cg['pax-gold'].eur_24h_change);
-    }
+    if (cg.bitcoin) setTile('t-btc', `$${Math.round(cg.bitcoin.usd).toLocaleString('de-DE')}`, cg.bitcoin.usd_24h_change);
+    if (cg['pax-gold']) setTile('t-gold', `€${(cg['pax-gold'].eur / 31.1034768).toFixed(1)}/g`, cg['pax-gold'].eur_24h_change);
   } catch (e) {}
 
-  // 3. Equities: try live Yahoo via CORS proxy, fallback to local markets.json (updated by GitHub Actions)
-  let fallback = null;
-  async function getFallback() {
-    if (fallback !== null) return fallback;
-    try {
-      fallback = await (await fetch('./markets.json?t=' + Date.now())).json();
-    } catch (e) { fallback = {}; }
-    return fallback;
-  }
-
+  // 3. Equities: render GitHub snapshot immediately so tiles are NEVER blank, then upgrade with live quotes
   const equities = [
-    ['^GSPC', 't-gspc', p => Math.round(p).toLocaleString('de-DE')],
+    ['^GSPC',   't-gspc', p => Math.round(p).toLocaleString('de-DE')],
     ['VGWD.DE', 't-vgwd', p => `€${p.toFixed(2)}`],
-    ['SPCX', 't-spcx', p => `$${p.toFixed(2)}`],
-    ['ANT', 't-ant', p => `$${p.toFixed(2)}`],
+    ['SPCX',    't-spcx', p => `$${p.toFixed(2)}`],
+    ['ANT',     't-ant',  p => `$${p.toFixed(2)}`],
   ];
 
+  const snap = await loadMarketsSnapshot();
+  for (const [sym, tileId, fmt] of equities) {
+    if (snap && snap[sym] && snap[sym].price) {
+      setTile(tileId, fmt(snap[sym].price), snap[sym].pct);
+    }
+  }
+
+  // Upgrade with live Yahoo quotes in background
   await Promise.all(equities.map(async ([sym, tileId, fmt]) => {
     try {
       const q = await fetchYahooQuote(sym);
-      setTile(tileId, fmt(q.price), q.pct);
-    } catch (e) {
-      const fb = await getFallback();
-      if (fb && fb[sym]) {
-        setTile(tileId, fmt(fb[sym].price), fb[sym].pct);
-      }
-    }
+      if (q && q.price) setTile(tileId, fmt(q.price), q.pct);
+    } catch (e) {}
   }));
 
   const now = new Date();
@@ -707,11 +859,13 @@ async function loadMarkets() {
 // ==================== 4. SPORTS (GALATASARAY & RB LEIPZIG) ====================
 async function loadClub(league, teamId, prefix) {
   try {
-    const [schedRes, standRes] = await Promise.all([
+    const [pastRes, fixRes, standRes] = await Promise.all([
       fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule`),
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule?fixture=true`),
       fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${league}/standings`)
     ]);
-    const sched = await schedRes.json();
+    const past = await pastRes.json();
+    const fix = await fixRes.json();
     const stand = await standRes.json();
 
     // Rank & Points
@@ -725,35 +879,26 @@ async function loadClub(league, teamId, prefix) {
       }
     } catch (e) {}
 
-    // Events: find last completed & next scheduled
-    const events = sched.events || [];
-    const nowMs = Date.now();
-    let lastEv = null;
-    let nextEv = null;
-    for (const ev of events) {
-      const comp = ev.competitions && ev.competitions[0];
-      if (!comp) continue;
-      const completed = comp.status && comp.status.type && comp.status.type.completed;
-      const evTime = new Date(ev.date).getTime();
-      if (completed) {
-        if (!lastEv || evTime > new Date(lastEv.date).getTime()) lastEv = ev;
-      } else if (evTime >= nowMs - 3600000 * 3) {
-        if (!nextEv || evTime < new Date(nextEv.date).getTime()) nextEv = ev;
-      }
-    }
-
-    if (nextEv) {
+    // Next upcoming fixture (from ?fixture=true)
+    const upcoming = (fix.events || []).filter(ev => new Date(ev.date).getTime() >= Date.now() - 3600000 * 3);
+    upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const nextEv = upcoming[0];
+    if (nextEv && nextEv.competitions && nextEv.competitions[0]) {
       const comp = nextEv.competitions[0];
       const home = comp.competitors.find(c => c.homeAway === 'home');
       const away = comp.competitors.find(c => c.homeAway === 'away');
       document.getElementById(`${prefix}-next`).textContent = `${home.team.shortDisplayName} vs ${away.team.shortDisplayName}`;
       const dt = new Date(nextEv.date);
-      const dayStr = `${DAYS_SHORT[dt.getDay()]} ${dt.getDate()}.${dt.getMonth()+1}. · ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
-      document.getElementById(`${prefix}-next-time`).textContent = dayStr;
+      document.getElementById(`${prefix}-next-time`).textContent =
+        `${DAYS_SHORT[dt.getDay()]} ${dt.getDate()}.${dt.getMonth()+1}. · ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
     } else {
       document.getElementById(`${prefix}-next`).textContent = 'Kein Spiel geplant';
     }
 
+    // Last completed result (from /schedule)
+    const done = (past.events || []).filter(ev => ev.competitions?.[0]?.status?.type?.completed);
+    done.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const lastEv = done[0];
     if (lastEv) {
       const comp = lastEv.competitions[0];
       const home = comp.competitors.find(c => c.homeAway === 'home');
@@ -801,9 +946,7 @@ async function loadNews() {
 
     newsPools.tr = (trJ.searchResults || []).filter(x => x.title).slice(0, 8);
     newsPools.de = (deJ.news || []).filter(x => x.title).slice(0, 9);
-    const wi = (wiJ.news || []).filter(x => x.title).slice(0, 5);
-    const au = (auJ.news || []).filter(x => x.title).slice(0, 5);
-    newsPools.welt = [...wi, ...au];
+    newsPools.welt = [...(wiJ.news || []).filter(x => x.title).slice(0, 5), ...(auJ.news || []).filter(x => x.title).slice(0, 5)];
 
     renderNewsCol('news-tr', newsPools.tr);
     renderNewsCol('news-de', newsPools.de);
@@ -857,28 +1000,13 @@ function togglePomo() {
   }
   renderPomo();
 }
-
-function resetPomo() {
-  running = false;
-  clearInterval(pomoTimer);
-  remaining = presets[presetIdx].mins * 60;
-  renderPomo();
-}
-
-function cyclePreset() {
-  presetIdx = (presetIdx + 1) % presets.length;
-  resetPomo();
-}
-
-function toggleAmbient() {
-  document.body.classList.toggle('ambient');
-}
+function resetPomo() { running = false; clearInterval(pomoTimer); remaining = presets[presetIdx].mins * 60; renderPomo(); }
+function cyclePreset() { presetIdx = (presetIdx + 1) % presets.length; resetPomo(); }
+function toggleAmbient() { document.body.classList.toggle('ambient'); }
 
 const buttons = Array.from(document.querySelectorAll('.btn'));
 let focusIdx = 0;
-function updateFocus() {
-  buttons.forEach((b, i) => b.classList.toggle('focused', i === focusIdx));
-}
+function updateFocus() { buttons.forEach((b, i) => b.classList.toggle('focused', i === focusIdx)); }
 function triggerBtn(btn) {
   const act = btn.dataset.action;
   if (act === 'toggle') togglePomo();
@@ -890,22 +1018,13 @@ buttons.forEach((b, i) => b.addEventListener('click', () => { focusIdx = i; upda
 
 document.addEventListener('keydown', (e) => {
   if (document.body.classList.contains('ambient')) {
-    if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Backspace' || e.keyCode === 10009 || e.keyCode === 13) {
-      toggleAmbient();
-    }
+    if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Backspace' || e.keyCode === 10009 || e.keyCode === 13) toggleAmbient();
     return;
   }
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-    focusIdx = (focusIdx + 1) % buttons.length;
-    updateFocus();
-  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-    focusIdx = (focusIdx - 1 + buttons.length) % buttons.length;
-    updateFocus();
-  } else if (e.key === 'Enter' || e.keyCode === 13) {
-    triggerBtn(buttons[focusIdx]);
-  } else if (e.keyCode === 415 || e.keyCode === 19 || e.keyCode === 10252) {
-    togglePomo();
-  }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { focusIdx = (focusIdx + 1) % buttons.length; updateFocus(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { focusIdx = (focusIdx - 1 + buttons.length) % buttons.length; updateFocus(); }
+  else if (e.key === 'Enter' || e.keyCode === 13) triggerBtn(buttons[focusIdx]);
+  else if (e.keyCode === 415 || e.keyCode === 19 || e.keyCode === 10252) togglePomo();
 });
 
 renderPomo();
@@ -919,13 +1038,10 @@ function refreshAll() {
   loadNews();
 }
 refreshAll();
-setInterval(loadMarkets, 300000);   // every 5 min
-setInterval(loadWeather, 900000);   // every 15 min
-setInterval(loadNews, 600000);      // every 10 min
-setInterval(() => {
-  loadClub('tur.1', 432, 'gala');
-  loadClub('ger.1', 11420, 'rbl');
-}, 900000);
+setInterval(loadMarkets, 300000);
+setInterval(loadWeather, 900000);
+setInterval(loadNews, 600000);
+setInterval(() => { loadClub('tur.1', 432, 'gala'); loadClub('ger.1', 11420, 'rbl'); }, 900000);
 </script>
 </body>
 </html>
