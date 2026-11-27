@@ -1195,18 +1195,20 @@ async function loadClub(league, teamId, prefix) {
       listEl.innerHTML = '<div class="fix-row">Kein Spiel geplant</div>';
     }
 
-    // Last completed result across ALL competitions (with logos)
+    // Last completed result across ALL competitions (with logos + competition table rank)
     const done = (past.events || []).filter(ev => ev.competitions?.[0]?.status?.type?.completed);
     done.sort((a, b) => new Date(b.date) - new Date(a.date));
     const lastEv = done[0];
     if (lastEv) {
+      const lastSlug = lastEv.league?.slug || '';
+      if (lastSlug) await getStandingsMap(lastSlug);
       const comp = lastEv.competitions[0];
       const home = comp.competitors.find(c => c.homeAway === 'home');
       const away = comp.competitors.find(c => c.homeAway === 'away');
       const hs = home.score?.displayValue ?? home.score ?? '-';
       const as = away.score?.displayValue ?? away.score ?? '-';
       document.getElementById(`${prefix}-last`).innerHTML =
-        `<img class="comp-ico" src="${teamLogo(home)}" onerror="this.style.display='none'"> ${home.team.shortDisplayName} ${hs}:${as} ${away.team.shortDisplayName} <img class="comp-ico" src="${teamLogo(away)}" onerror="this.style.display='none'">`;
+        `<img class="comp-ico" src="${teamLogo(home)}" onerror="this.style.display='none'"> ${fmtTeam(home, lastSlug)} ${hs}:${as} ${fmtTeam(away, lastSlug)} <img class="comp-ico" src="${teamLogo(away)}" onerror="this.style.display='none'">`;
     }
   } catch (e) {}
 }
