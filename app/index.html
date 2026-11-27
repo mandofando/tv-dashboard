@@ -89,7 +89,6 @@
     width: 66vh;
     height: 44vh;
     transform: translate(-50%, -50%) rotate(-16deg);
-    filter: drop-shadow(0 0 42px rgba(234, 200, 130, 0.20));
   }
   .s-orbit {
     position: absolute;
@@ -126,9 +125,6 @@
     height: 44vh;
     transform: translate(-50%, -50%) rotate(-8deg);
     border-radius: 50%;
-    box-shadow:
-      0 0 70px rgba(217, 138, 78, 0.22),
-      0 0 140px rgba(180, 100, 50, 0.12);
     overflow: hidden;
   }
 
@@ -360,22 +356,21 @@
     font-size: 1.5vh;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
     white-space: nowrap;
   }
   .btn.focused, .btn:focus {
     outline: none;
     border-color: var(--focus-ring);
-    background: rgba(56, 189, 248, 0.32);
-    transform: scale(1.04);
-    box-shadow: 0 0 18px rgba(56, 189, 248, 0.38);
+    background: rgba(56, 189, 248, 0.34);
   }
 
   /* ROW 2 */
   .row-mid {
     display: grid;
-    grid-template-columns: 1.28fr 1.72fr;
+    grid-template-columns: 44% calc(56% - 1.2vw);
     gap: 1.2vw;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
   }
   .markets-grid {
@@ -478,8 +473,10 @@
   }
   .leaders-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.38vw;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.32vw;
+    width: 100%;
+    min-width: 0;
   }
   .leader-pill {
     background: rgba(255,255,255,0.045);
@@ -929,13 +926,13 @@
   const canvas = document.getElementById('starfield');
   const ctx = canvas.getContext('2d');
   function drawStars() {
-    const w = canvas.width = window.innerWidth;
-    const h = canvas.height = window.innerHeight;
+    const w = canvas.width = Math.min(window.innerWidth, 1280);
+    const h = canvas.height = Math.min(window.innerHeight, 720);
     ctx.clearRect(0, 0, w, h);
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < 160; i++) {
       const x = Math.random() * w;
       const y = Math.random() * h;
-      const r = Math.random() * 1.45 + 0.35;
+      const r = Math.random() * 1.2 + 0.35;
       ctx.globalAlpha = Math.random() * 0.65 + 0.25;
       ctx.fillStyle = Math.random() > 0.8 ? '#bae6fd' : (Math.random() > 0.85 ? '#fde68a' : '#f8fafc');
       ctx.beginPath();
@@ -945,9 +942,8 @@
     ctx.globalAlpha = 1;
   }
   drawStars();
-  window.addEventListener('resize', drawStars);
 
-  // Move moons smoothly via GPU transform at 10fps (zero TV lag!)
+  // Position moons once (and update gently every 10 seconds -> 0% TV CPU lag!)
   const moons = [
     { el: document.getElementById('m-io'),       rx: 31, ry: 7.5,  speed: 0.00045, phase: 0.4 },
     { el: document.getElementById('m-europa'),   rx: 38, ry: 9.5,  speed: 0.00028, phase: 2.1 },
@@ -984,7 +980,7 @@
     }
   }
   tickMoons();
-  setInterval(tickMoons, 120);
+  setInterval(tickMoons, 10000);
 })();
 
 // ==================== 1. CLOCK ====================
