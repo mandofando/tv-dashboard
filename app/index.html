@@ -60,8 +60,8 @@
     transition: all 0.8s ease;
   }
   body.ambient .jupiter-system {
-    right: 8vw;
-    transform: translateY(-50%) scale(1.08);
+    right: 2vw;
+    transform: translateY(-50%) scale(0.94);
     opacity: 0.98;
   }
 
@@ -75,11 +75,11 @@
     height: 56vh;
     pointer-events: none;
     opacity: 0.88;
-    transition: all 0.8s ease;
+    transition: opacity 0.5s ease;
   }
   body.ambient .saturn-system {
-    left: 7vw;
-    transform: translateY(-50%) scale(1.08);
+    left: 2vw;
+    transform: translateY(-50%) scale(0.94);
     opacity: 0.98;
   }
   .saturn-svg {
@@ -148,8 +148,10 @@
 
   .moon-dot {
     position: absolute;
+    left: 0;
+    top: 0;
     border-radius: 50%;
-    transform: translate(-50%, -50%);
+    will-change: transform;
   }
   .moon-io       { width: 10px; height: 10px; background: radial-gradient(circle at 35% 35%, #fef08a, #ca8a04); box-shadow: 0 0 10px rgba(250, 204, 21, 0.8); }
   .moon-europa   { width: 9px;  height: 9px;  background: radial-gradient(circle at 35% 35%, #e0f2fe, #7dd3fc); box-shadow: 0 0 10px rgba(125, 211, 252, 0.85); }
@@ -173,13 +175,12 @@
     background: var(--card);
     border: 1px solid var(--card-border);
     border-radius: 18px;
-    padding: 1.5vh 1.5vw;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    padding: 1.4vh 1.35vw;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
+    min-width: 0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
   }
 
   .section-label {
@@ -373,42 +374,47 @@
   /* ROW 2 */
   .row-mid {
     display: grid;
-    grid-template-columns: 1.75fr 1.25fr;
-    gap: 1.4vw;
+    grid-template-columns: 1.28fr 1.72fr;
+    gap: 1.2vw;
+    min-width: 0;
   }
   .markets-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     grid-template-rows: repeat(2, 1fr);
-    gap: 1.1vh 0.85vw;
+    gap: 0.95vh 0.6vw;
     flex: 1;
+    min-width: 0;
   }
   .m-tile {
     background: rgba(255,255,255,0.045);
     border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
-    padding: 1.3vh 1vw;
+    border-radius: 13px;
+    padding: 1.05vh 0.72vw;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    min-width: 0;
+    overflow: hidden;
   }
-  .m-head { display: flex; justify-content: space-between; align-items: center; }
-  .m-name { font-size: 1.65vh; font-weight: 700; color: #e2e8f0; }
-  .m-sub { font-size: 1.25vh; color: var(--muted); font-weight: 600; }
+  .m-head { display: flex; justify-content: space-between; align-items: center; gap: 0.25vw; }
+  .m-name { font-size: 1.45vh; font-weight: 700; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-sub { font-size: 1.1vh; color: var(--muted); font-weight: 600; white-space: nowrap; }
   .m-price {
-    font-size: 3.1vh;
+    font-size: 2.55vh;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
-    margin: 0.35vh 0;
+    margin: 0.25vh 0;
+    white-space: nowrap;
   }
   .m-chg {
-    font-size: 1.45vh;
+    font-size: 1.3vh;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
-    gap: 0.3vw;
-    padding: 0.25vh 0.55vw;
+    gap: 0.25vw;
+    padding: 0.2vh 0.45vw;
     border-radius: 999px;
     width: fit-content;
     font-variant-numeric: tabular-nums;
@@ -438,19 +444,22 @@
   /* Sports */
   .sports-split {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1vw;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.85vw;
     flex: 1;
+    min-width: 0;
   }
   .club-card {
     background: rgba(255,255,255,0.045);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 14px;
-    padding: 1.1vh 0.95vw;
+    padding: 1.0vh 0.85vw;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 0.55vh;
+    gap: 0.5vh;
+    min-width: 0;
+    overflow: hidden;
   }
   .club-card.gala { border-top: 3px solid var(--gala); }
   .club-card.rbl { border-top: 3px solid var(--rbl); }
@@ -915,88 +924,67 @@
 </div>
 
 <script>
-// ==================== 0. STARFIELD + ORBITING GALILEAN MOONS ====================
+// ==================== 0. STATIC 4K STARFIELD + LOW-CPU MOON ORBITS ====================
 (function initSpace() {
   const canvas = document.getElementById('starfield');
   const ctx = canvas.getContext('2d');
-  let w, h, stars = [];
-  function resize() {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
-    stars = Array.from({ length: 190 }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 1.5 + 0.35,
-      base: Math.random() * 0.65 + 0.2,
-      phase: Math.random() * Math.PI * 2,
-      speed: Math.random() * 0.015 + 0.004,
-      tint: Math.random() > 0.8 ? '#bae6fd' : (Math.random() > 0.85 ? '#fde68a' : '#f8fafc')
-    }));
+  function drawStars() {
+    const w = canvas.width = window.innerWidth;
+    const h = canvas.height = window.innerHeight;
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < 180; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const r = Math.random() * 1.45 + 0.35;
+      ctx.globalAlpha = Math.random() * 0.65 + 0.25;
+      ctx.fillStyle = Math.random() > 0.8 ? '#bae6fd' : (Math.random() > 0.85 ? '#fde68a' : '#f8fafc');
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
-  resize();
-  window.addEventListener('resize', resize);
+  drawStars();
+  window.addEventListener('resize', drawStars);
 
+  // Move moons smoothly via GPU transform at 10fps (zero TV lag!)
   const moons = [
     { el: document.getElementById('m-io'),       rx: 31, ry: 7.5,  speed: 0.00045, phase: 0.4 },
     { el: document.getElementById('m-europa'),   rx: 38, ry: 9.5,  speed: 0.00028, phase: 2.1 },
     { el: document.getElementById('m-ganymede'), rx: 46, ry: 12.0, speed: 0.00018, phase: 4.0 },
     { el: document.getElementById('m-callisto'), rx: 56, ry: 15.0, speed: 0.00011, phase: 5.5 }
   ];
-  const tilt = -12 * Math.PI / 180;
-  const cosT = Math.cos(tilt), sinT = Math.sin(tilt);
-
   const sMoons = [
     { el: document.getElementById('m-enceladus'), rx: 29, ry: 7.0,  speed: 0.00038, phase: 1.2 },
     { el: document.getElementById('m-titan'),     rx: 39, ry: 10.0, speed: 0.00016, phase: 4.4 }
   ];
-  const sTilt = -16 * Math.PI / 180;
-  const cosS = Math.cos(sTilt), sinS = Math.sin(sTilt);
+  const cosT = Math.cos(-12 * Math.PI / 180), sinT = Math.sin(-12 * Math.PI / 180);
+  const cosS = Math.cos(-16 * Math.PI / 180), sinS = Math.sin(-16 * Math.PI / 180);
 
-  function frame(ts) {
-    ctx.clearRect(0, 0, w, h);
-    for (const s of stars) {
-      s.phase += s.speed;
-      ctx.globalAlpha = s.base + Math.sin(s.phase) * 0.22;
-      ctx.fillStyle = s.tint;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
+  function tickMoons() {
+    const ts = performance.now();
     const vh = window.innerHeight / 100;
     const sysEl = document.getElementById('jupiter-system');
-    const cx = sysEl.clientWidth / 2;
-    const cy = sysEl.clientHeight / 2;
+    const cx = sysEl.clientWidth / 2, cy = sysEl.clientHeight / 2;
     for (const m of moons) {
       const a = m.phase + ts * m.speed;
-      const ox = Math.cos(a) * m.rx * vh;
-      const oy = Math.sin(a) * m.ry * vh;
-      const rx = ox * cosT - oy * sinT;
-      const ry = ox * sinT + oy * cosT;
-      m.el.style.left = `${cx + rx}px`;
-      m.el.style.top = `${cy + ry}px`;
-      m.el.style.zIndex = Math.sin(a) > 0 ? 5 : 0;
+      const ox = Math.cos(a) * m.rx * vh, oy = Math.sin(a) * m.ry * vh;
+      const rx = cx + ox * cosT - oy * sinT, ry = cy + ox * sinT + oy * cosT;
+      m.el.style.transform = `translate3d(${rx.toFixed(1)}px, ${ry.toFixed(1)}px, 0)`;
       m.el.style.opacity = Math.sin(a) > -0.1 ? 0.95 : 0.35;
     }
-
     const satEl = document.getElementById('saturn-system');
-    const scx = satEl.clientWidth / 2;
-    const scy = satEl.clientHeight / 2;
+    const scx = satEl.clientWidth / 2, scy = satEl.clientHeight / 2;
     for (const m of sMoons) {
       const a = m.phase + ts * m.speed;
-      const ox = Math.cos(a) * m.rx * vh;
-      const oy = Math.sin(a) * m.ry * vh;
-      const rx = ox * cosS - oy * sinS;
-      const ry = ox * sinS + oy * cosS;
-      m.el.style.left = `${scx + rx}px`;
-      m.el.style.top = `${scy + ry}px`;
-      m.el.style.zIndex = Math.sin(a) > 0 ? 5 : 0;
+      const ox = Math.cos(a) * m.rx * vh, oy = Math.sin(a) * m.ry * vh;
+      const rx = scx + ox * cosS - oy * sinS, ry = scy + ox * sinS + oy * cosS;
+      m.el.style.transform = `translate3d(${rx.toFixed(1)}px, ${ry.toFixed(1)}px, 0)`;
       m.el.style.opacity = Math.sin(a) > -0.1 ? 0.95 : 0.35;
     }
-    requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  tickMoons();
+  setInterval(tickMoons, 120);
 })();
 
 // ==================== 1. CLOCK ====================
