@@ -20,6 +20,6 @@ jobs:
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/markets.json
-          git diff --cached --quiet || git commit -m "chore: refresh markets snapshot"
+          git add app/markets.json app/leaders.json
+          git diff --cached --quiet || git commit -m "chore: refresh markets and FotMob leaders"
           git push

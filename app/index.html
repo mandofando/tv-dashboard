@@ -1173,60 +1173,49 @@ function compInfo(ev) {
   return { name: label, logo: base.logo };
 }
 
-const photoCache = {};
-async function getPlayerPhoto(name) {
-  if (photoCache[name] !== undefined) return photoCache[name];
-  try {
-    const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(name.replace(/ /g, '_')));
-    if (r.ok) {
-      const j = await r.json();
-      if (j.thumbnail?.source) { photoCache[name] = j.thumbnail.source; return photoCache[name]; }
-    }
-  } catch (e) {}
-  photoCache[name] = '';
-  return '';
-}
-
 function shortLastName(full) {
   const parts = full.trim().split(' ');
   return parts.length > 1 ? parts[parts.length - 1] : full;
 }
 
+let leadersPromise = null;
+function fetchLeadersJson() {
+  if (!leadersPromise) {
+    leadersPromise = (async () => {
+      const urls = [
+        'https://raw.githubusercontent.com/mandofando/tv-dashboard/main/app/leaders.json?t=' + Date.now(),
+        'https://cdn.jsdelivr.net/gh/mandofando/tv-dashboard@main/app/leaders.json?t=' + Date.now(),
+        './leaders.json?t=' + Date.now()
+      ];
+      for (const u of urls) {
+        try {
+          const r = await fetch(u);
+          if (r.ok) return await r.json();
+        } catch (e) {}
+      }
+      return {};
+    })();
+  }
+  return leadersPromise;
+}
+
 async function loadTeamLeaders(league, teamId, prefix) {
   try {
-    const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/teams/${teamId}/roster`);
-    if (!r.ok) return;
-    const d = await r.json();
-    const list = [];
-    for (const a of (d.athletes || [])) {
-      const st = {};
-      for (const c of (a.statistics?.splits?.categories || [])) {
-        for (const s of (c.stats || [])) st[s.name] = s.value || 0;
-      }
-      const apps = st.appearances || 0;
-      if (apps > 0) {
-        const g = st.totalGoals || 0;
-        const as = st.goalAssists || 0;
-        list.push({ name: a.displayName, goals: g, assists: as, ga: g + as, apps, rate: apps >= 3 ? (g + as) / apps : 0 });
-      }
-    }
-    if (!list.length) return;
-    const topG = [...list].sort((a, b) => b.goals - a.goals || b.assists - a.assists)[0];
-    const topA = [...list].sort((a, b) => b.assists - a.assists || b.goals - a.goals)[0];
-    const topR = [...list].sort((a, b) => b.rate - a.rate || b.ga - a.ga)[0];
-
+    const all = await fetchLeadersJson();
+    const club = all[prefix];
+    if (!club) return;
     const items = [
-      { tag: '⚽ Tore', p: topG, val: String(Math.round(topG.goals)) },
-      { tag: '🎯 Vorl.', p: topA, val: String(Math.round(topA.assists)) },
-      { tag: '🔥 T+V/Sp', p: topR, val: topR.rate.toFixed(2) }
-    ];
-    const photos = await Promise.all(items.map(it => getPlayerPhoto(it.p.name)));
-    document.getElementById(`${prefix}-leaders`).innerHTML = items.map((it, i) => {
-      const ini = it.p.name.split(' ').map(x => x[0]).join('').slice(0, 2);
-      const av = photos[i]
-        ? `<img class="leader-av" src="${photos[i]}" alt="${ini}">`
+      { tag: '⚽ Tore',   d: club['Top scorer'],    fmt: v => String(v) },
+      { tag: '🎯 Vorl.',  d: club['Assists'],       fmt: v => String(v) },
+      { tag: '⭐ Note',   d: club['FotMob rating'], fmt: v => Number(v).toFixed(2) }
+    ].filter(x => x.d && x.d.name);
+
+    document.getElementById(`${prefix}-leaders`).innerHTML = items.map(it => {
+      const ini = it.d.name.split(' ').map(x => x[0]).join('').slice(0, 2);
+      const av = it.d.img
+        ? `<img class="leader-av" src="${it.d.img}" alt="${ini}" onerror="this.style.display='none'">`
         : `<div class="leader-av">${ini}</div>`;
-      return `<div class="leader-pill">${av}<div class="leader-txt"><div class="leader-tag">${it.tag} <span class="leader-val">${it.val}</span></div><div class="leader-name">${shortLastName(it.p.name)}</div></div></div>`;
+      return `<div class="leader-pill">${av}<div class="leader-txt"><div class="leader-tag">${it.tag} <span class="leader-val">${it.fmt(it.d.value)}</span></div><div class="leader-name">${shortLastName(it.d.name)}</div></div></div>`;
     }).join('');
   } catch (e) {}
 }
