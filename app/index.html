@@ -859,8 +859,8 @@
         <div class="m-tile" id="t-gspc"><div class="m-head"><span class="m-name">S&amp;P 500</span><span class="m-sub">^GSPC</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
         <div class="m-tile" id="t-bist"><div class="m-head"><span class="m-name">BIST 100</span><span class="m-sub">XU100.IS</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
         <div class="m-tile" id="t-vgwd"><div class="m-head"><span class="m-name">Vanguard Div</span><span class="m-sub">VGWD.DE</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
-        <div class="m-tile" id="t-spant"><div class="m-head"><span class="m-name">SpaceX / Anthr.</span><span class="m-sub">SPCX/ANT</span></div><div class="m-price" style="font-size:2.05vh">-- / --</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
-        <div class="m-tile" id="t-bonds"><div class="m-head"><span class="m-name">Bonds US/EU/CN</span><span class="m-sub">IEF/EUNH/CBON</span></div><div class="m-price" style="font-size:1.75vh">-- / -- / --</div><div class="m-chg flat">10Y …</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-spant"><div class="m-head"><span class="m-name">SPCX / ANT</span><span class="m-sub">USD</span></div><div class="m-price" style="font-size:2.05vh">-- / --</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-bonds"><div class="m-head"><span class="m-name">Bonds</span><span class="m-sub">US/EU/CN</span></div><div class="m-price" style="font-size:1.75vh">-- / -- / --</div><div class="m-chg flat">10Y …</div><div class="m-sigs"></div></div>
       </div>
     </div>
 
@@ -1112,14 +1112,19 @@ async function fetchYahooQuote(symbol) {
 }
 
 async function loadMarketsSnapshot() {
-  const urls = [
-    'https://raw.githubusercontent.com/mandofando/tv-dashboard/main/app/markets.json?t=' + Date.now(),
-    'https://cdn.jsdelivr.net/gh/mandofando/tv-dashboard@main/app/markets.json?t=' + Date.now(),
-    './markets.json?t=' + Date.now()
-  ];
+  const urls = location.protocol === 'file:'
+    ? [
+        'https://raw.githubusercontent.com/mandofando/tv-dashboard/main/app/markets.json?t=' + Date.now(),
+        'https://cdn.jsdelivr.net/gh/mandofando/tv-dashboard@main/app/markets.json?t=' + Date.now()
+      ]
+    : [
+        './markets.json?t=' + Date.now(),
+        'https://raw.githubusercontent.com/mandofando/tv-dashboard/main/app/markets.json?t=' + Date.now(),
+        'https://cdn.jsdelivr.net/gh/mandofando/tv-dashboard@main/app/markets.json?t=' + Date.now()
+      ];
   for (const u of urls) {
     try {
-      const r = await fetch(u);
+      const r = await fetch(u, { cache: 'no-store' });
       if (r.ok) return await r.json();
     } catch (e) {}
   }
