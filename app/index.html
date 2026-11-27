@@ -642,7 +642,7 @@
         </div>
         <div class="pomo-btns">
           <button class="btn focused" data-action="toggle" id="btn-toggle">▶ Start</button>
-          <button class="btn" data-action="reset">↺ Reset</button>
+          <button class="btn" data-action="sound" id="btn-sound">🌊 Ton: Ein</button>
           <button class="btn" data-action="preset">⏱ 25 / 50 / 5</button>
           <button class="btn" data-action="ambient">🪐 Ambient</button>
         </div>
@@ -1081,7 +1081,97 @@ setInterval(() => {
   renderNewsCol('news-welt', newsPools.welt);
 }, 14000);
 
-// ==================== 6. POMODORO & TV REMOTE CONTROL ====================
+// ==================== 6. REALISTIC OCEAN WAVES (WEB AUDIO) + POMODORO ====================
+const OceanAudio = (() => {
+  let ctx = null, master = null, runningAudio = false;
+  function init() {
+    if (ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC();
+
+    // 8-second seamless brown-ish noise buffer for warm, realistic surf
+    const sr = ctx.sampleRate;
+    const len = sr * 8;
+    const buf = ctx.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buf.getChannelData(ch);
+      let last = 0;
+      for (let i = 0; i < len; i++) {
+        const white = Math.random() * 2 - 1;
+        last = (last + 0.025 * white) / 1.025;
+        data[i] = last * 3.2;
+      }
+    }
+
+    // Layer 1: Deep slow ocean swell (rolls in every ~10s)
+    const src1 = ctx.createBufferSource();
+    src1.buffer = buf; src1.loop = true;
+    const lp1 = ctx.createBiquadFilter();
+    lp1.type = 'lowpass'; lp1.frequency.value = 340; lp1.Q.value = 0.7;
+    const g1 = ctx.createGain(); g1.gain.value = 0.42;
+
+    const lfo1 = ctx.createOscillator();
+    lfo1.type = 'sine'; lfo1.frequency.value = 0.095; // ~10.5s per wave
+    const lfo1FreqGain = ctx.createGain(); lfo1FreqGain.gain.value = 230;
+    const lfo1AmpGain = ctx.createGain(); lfo1AmpGain.gain.value = 0.24;
+    lfo1.connect(lfo1FreqGain).connect(lp1.frequency);
+    lfo1.connect(lfo1AmpGain).connect(g1.gain);
+
+    // Layer 2: Soft shore foam / gentle receding hiss (~14s cycle, offset)
+    const src2 = ctx.createBufferSource();
+    src2.buffer = buf; src2.loop = true;
+    const bp2 = ctx.createBiquadFilter();
+    bp2.type = 'bandpass'; bp2.frequency.value = 720; bp2.Q.value = 0.6;
+    const g2 = ctx.createGain(); g2.gain.value = 0.14;
+
+    const lfo2 = ctx.createOscillator();
+    lfo2.type = 'sine'; lfo2.frequency.value = 0.068; // ~14.7s
+    const lfo2Amp = ctx.createGain(); lfo2Amp.gain.value = 0.11;
+    lfo2.connect(lfo2Amp).connect(g2.gain);
+
+    master = ctx.createGain();
+    master.gain.value = 0.0001;
+
+    src1.connect(lp1).connect(g1).connect(master);
+    src2.connect(bp2).connect(g2).connect(master);
+    master.connect(ctx.destination);
+
+    src1.start(); src2.start(0, 3.5);
+    lfo1.start(); lfo2.start();
+  }
+
+  function start() {
+    init();
+    if (ctx.state === 'suspended') ctx.resume();
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setTargetAtTime(0.55, ctx.currentTime, 1.2);
+    runningAudio = true;
+  }
+
+  function stop() {
+    if (!ctx || !master) return;
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.8);
+    runningAudio = false;
+  }
+
+  function chime() {
+    init();
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(528, ctx.currentTime);
+    g.gain.setValueAtTime(0.22, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.4);
+    osc.connect(g).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 2.5);
+  }
+
+  return { start, stop, chime, isRunning: () => runningAudio };
+})();
+
 const presets = [
   { mins: 25, label: 'Fokus 25m' },
   { mins: 50, label: 'Deep Work 50m' },
@@ -1090,6 +1180,7 @@ const presets = [
 let presetIdx = 0;
 let remaining = presets[0].mins * 60;
 let running = false;
+let soundEnabled = true;
 let pomoTimer = null;
 
 function renderPomo() {
@@ -1097,6 +1188,7 @@ function renderPomo() {
   const s = String(remaining % 60).padStart(2, '0');
   document.getElementById('pomo-display').textContent = `${m}:${s}`;
   document.getElementById('btn-toggle').textContent = running ? '⏸ Pause' : '▶ Start';
+  document.getElementById('btn-sound').textContent = soundEnabled ? '🌊 Ton: Ein' : '🔇 Ton: Aus';
   document.getElementById('pomo-status').textContent = running ? `${presets[presetIdx].label} läuft…` : `${presets[presetIdx].label} · Bereit`;
   document.getElementById('amb-pomo').textContent = running ? `⏱ ${m}:${s} · ${presets[presetIdx].label}` : '';
 }
@@ -1104,6 +1196,7 @@ function renderPomo() {
 function togglePomo() {
   running = !running;
   if (running) {
+    if (soundEnabled) OceanAudio.start();
     pomoTimer = setInterval(() => {
       if (remaining > 0) {
         remaining--;
@@ -1111,16 +1204,27 @@ function togglePomo() {
       } else {
         running = false;
         clearInterval(pomoTimer);
+        OceanAudio.stop();
+        if (soundEnabled) OceanAudio.chime();
         document.getElementById('pomo-status').textContent = '✓ Fertig!';
         renderPomo();
       }
     }, 1000);
   } else {
     clearInterval(pomoTimer);
+    OceanAudio.stop();
   }
   renderPomo();
 }
-function resetPomo() { running = false; clearInterval(pomoTimer); remaining = presets[presetIdx].mins * 60; renderPomo(); }
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  if (running) {
+    if (soundEnabled) OceanAudio.start();
+    else OceanAudio.stop();
+  }
+  renderPomo();
+}
+function resetPomo() { running = false; clearInterval(pomoTimer); OceanAudio.stop(); remaining = presets[presetIdx].mins * 60; renderPomo(); }
 function cyclePreset() { presetIdx = (presetIdx + 1) % presets.length; resetPomo(); }
 function toggleAmbient() { document.body.classList.toggle('ambient'); }
 
@@ -1130,7 +1234,7 @@ function updateFocus() { buttons.forEach((b, i) => b.classList.toggle('focused',
 function triggerBtn(btn) {
   const act = btn.dataset.action;
   if (act === 'toggle') togglePomo();
-  else if (act === 'reset') resetPomo();
+  else if (act === 'sound') toggleSound();
   else if (act === 'preset') cyclePreset();
   else if (act === 'ambient') toggleAmbient();
 }
