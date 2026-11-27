@@ -428,42 +428,90 @@
     background: rgba(255,255,255,0.045);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 14px;
-    padding: 1.35vh 1.05vw;
+    padding: 1.1vh 0.95vw;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    gap: 0.55vh;
   }
   .club-card.gala { border-top: 3px solid var(--gala); }
   .club-card.rbl { border-top: 3px solid var(--rbl); }
-  .club-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5vw; }
-  .club-title { display: flex; align-items: center; gap: 0.55vw; }
-  .club-logo { width: 4.2vh; height: 4.2vh; object-fit: contain; }
-  .club-name { font-size: 2.05vh; font-weight: 800; }
+  .club-top { display: flex; align-items: center; justify-content: space-between; gap: 0.4vw; }
+  .club-title { display: flex; align-items: center; gap: 0.5vw; }
+  .club-logo { width: 3.4vh; height: 3.4vh; object-fit: contain; }
+  .club-name { font-size: 1.9vh; font-weight: 800; }
   .club-rank {
-    font-size: 1.45vh;
+    font-size: 1.35vh;
     font-weight: 700;
-    padding: 0.35vh 0.65vw;
+    padding: 0.3vh 0.55vw;
     border-radius: 999px;
     background: rgba(255,255,255,0.10);
     color: var(--gold);
     white-space: nowrap;
   }
-  .club-block {
-    background: rgba(0,0,0,0.32);
-    border-radius: 10px;
-    padding: 1vh 0.8vw;
-    margin-top: 0.8vh;
+  .fix-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55vh;
+    flex: 1;
+    justify-content: center;
   }
-  .club-tag {
-    font-size: 1.2vh;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+  .fix-row {
+    background: rgba(0,0,0,0.34);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 9px;
+    padding: 0.65vh 0.65vw;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3vh;
+  }
+  .fix-row.primary {
+    background: rgba(56, 189, 248, 0.10);
+    border-color: rgba(56, 189, 248, 0.25);
+  }
+  .fix-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4vw;
+    font-size: 1.18vh;
     color: var(--muted);
-    font-weight: 700;
-    margin-bottom: 0.35vh;
+    font-weight: 600;
   }
-  .club-match { font-size: 1.85vh; font-weight: 700; line-height: 1.25; }
-  .club-meta { font-size: 1.45vh; color: var(--accent); margin-top: 0.35vh; font-weight: 600; }
+  .fix-comp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3vw;
+    color: #cbd5e1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .comp-ico { width: 1.65vh; height: 1.65vh; object-fit: contain; flex-shrink: 0; }
+  .fix-time { color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .fix-teams {
+    display: flex;
+    align-items: center;
+    gap: 0.38vw;
+    font-size: 1.52vh;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .team-ico { width: 2.05vh; height: 2.05vh; object-fit: contain; flex-shrink: 0; }
+  .fix-vs { color: var(--muted); font-size: 1.2vh; font-weight: 600; }
+  .club-last {
+    font-size: 1.28vh;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.45vh;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .club-last strong { color: #e2e8f0; display: inline-flex; align-items: center; gap: 0.3vw; }
 
   /* ROW 3: NEWS */
   .news-grid {
@@ -758,15 +806,8 @@
             </div>
             <div class="club-rank" id="gala-rank">--</div>
           </div>
-          <div class="club-block">
-            <div class="club-tag">Nächstes Spiel</div>
-            <div class="club-match" id="gala-next">Lade Spielplan…</div>
-            <div class="club-meta" id="gala-next-time"></div>
-          </div>
-          <div class="club-block">
-            <div class="club-tag">Letztes Ergebnis</div>
-            <div class="club-match" id="gala-last">--</div>
-          </div>
+          <div class="fix-list" id="gala-fixtures"><div class="fix-row">Lade Spielplan…</div></div>
+          <div class="club-last"><span>Letztes</span><strong id="gala-last">--</strong></div>
         </div>
 
         <div class="club-card rbl">
@@ -777,15 +818,8 @@
             </div>
             <div class="club-rank" id="rbl-rank">--</div>
           </div>
-          <div class="club-block">
-            <div class="club-tag">Nächstes Spiel</div>
-            <div class="club-match" id="rbl-next">Lade Spielplan…</div>
-            <div class="club-meta" id="rbl-next-time"></div>
-          </div>
-          <div class="club-block">
-            <div class="club-tag">Letztes Ergebnis</div>
-            <div class="club-match" id="rbl-last">--</div>
-          </div>
+          <div class="fix-list" id="rbl-fixtures"><div class="fix-row">Lade Spielplan…</div></div>
+          <div class="club-last"><span>Letztes</span><strong id="rbl-last">--</strong></div>
         </div>
       </div>
     </div>
@@ -1058,12 +1092,32 @@ async function loadMarkets() {
   document.getElementById('m-updated').textContent = `Stand ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 }
 
-// ==================== 4. SPORTS (GALATASARAY & RB LEIPZIG) ====================
+// ==================== 4. SPORTS (GALATASARAY & RB LEIPZIG — NEXT 3 ALL COMPS + LOGOS) ====================
+const COMP_MAP = {
+  'tur.1':           { name: 'Süper Lig',        logo: 'https://a.espncdn.com/i/leaguelogos/soccer/500-dark/18.png' },
+  'ger.1':           { name: 'Bundesliga',       logo: 'https://a.espncdn.com/i/leaguelogos/soccer/500-dark/10.png' },
+  'uefa.champions':  { name: 'Champions League', logo: 'https://a.espncdn.com/i/leaguelogos/soccer/500-dark/2.png' },
+  'uefa.europa':     { name: 'Europa League',    logo: 'https://a.espncdn.com/i/leaguelogos/soccer/500-dark/2310.png' },
+  'uefa.europa.conf':{ name: 'Conference L.',    logo: 'https://a.espncdn.com/i/leaguelogos/soccer/500-dark/20296.png' },
+  'ger.dfb_pokal':   { name: 'DFB-Pokal',        logo: 'https://a.espncdn.com/i/leaguelogos/soccer/500-dark/2061.png' },
+  'tur.cup':         { name: 'Türkiye Kupası',   logo: 'https://a.espncdn.com/i/leaguelogos/soccer/500-dark/2200.png' }
+};
+
+function compInfo(ev) {
+  const slug = ev.league?.slug || '';
+  if (COMP_MAP[slug]) return COMP_MAP[slug];
+  return { name: ev.league?.shortName || ev.league?.name || 'Spiel', logo: '' };
+}
+
+function teamLogo(comp) {
+  return comp?.team?.logos?.[0]?.href || (comp?.team?.id ? `https://a.espncdn.com/i/teamlogos/soccer/500/${comp.team.id}.png` : '');
+}
+
 async function loadClub(league, teamId, prefix) {
   try {
     const [pastRes, fixRes, standRes] = await Promise.all([
-      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule`),
-      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule?fixture=true`),
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${teamId}/schedule`),
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${teamId}/schedule?fixture=true`),
       fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${league}/standings`)
     ]);
     const past = await pastRes.json();
@@ -1081,23 +1135,38 @@ async function loadClub(league, teamId, prefix) {
       }
     } catch (e) {}
 
-    // Next upcoming fixture (from ?fixture=true)
+    // Next 3 upcoming fixtures across ALL competitions
     const upcoming = (fix.events || []).filter(ev => new Date(ev.date).getTime() >= Date.now() - 3600000 * 3);
     upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
-    const nextEv = upcoming[0];
-    if (nextEv && nextEv.competitions && nextEv.competitions[0]) {
-      const comp = nextEv.competitions[0];
-      const home = comp.competitors.find(c => c.homeAway === 'home');
-      const away = comp.competitors.find(c => c.homeAway === 'away');
-      document.getElementById(`${prefix}-next`).textContent = `${home.team.shortDisplayName} vs ${away.team.shortDisplayName}`;
-      const dt = new Date(nextEv.date);
-      document.getElementById(`${prefix}-next-time`).textContent =
-        `${DAYS_SHORT[dt.getDay()]} ${dt.getDate()}.${dt.getMonth()+1}. · ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    const listEl = document.getElementById(`${prefix}-fixtures`);
+    if (upcoming.length) {
+      listEl.innerHTML = upcoming.slice(0, 3).map((ev, idx) => {
+        const comp = ev.competitions[0];
+        const home = comp.competitors.find(c => c.homeAway === 'home');
+        const away = comp.competitors.find(c => c.homeAway === 'away');
+        const ci = compInfo(ev);
+        const dt = new Date(ev.date);
+        const tStr = `${DAYS_SHORT[dt.getDay()]} ${dt.getDate()}.${dt.getMonth()+1}. · ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+        const cImg = ci.logo ? `<img class="comp-ico" src="${ci.logo}" onerror="this.style.display='none'">` : '';
+        return `<div class="fix-row ${idx === 0 ? 'primary' : ''}">
+          <div class="fix-meta">
+            <span class="fix-comp">#${idx+1} ${cImg} ${ci.name}</span>
+            <span class="fix-time">${tStr}</span>
+          </div>
+          <div class="fix-teams">
+            <img class="team-ico" src="${teamLogo(home)}" onerror="this.style.display='none'">
+            <span>${home.team.shortDisplayName}</span>
+            <span class="fix-vs">vs</span>
+            <img class="team-ico" src="${teamLogo(away)}" onerror="this.style.display='none'">
+            <span>${away.team.shortDisplayName}</span>
+          </div>
+        </div>`;
+      }).join('');
     } else {
-      document.getElementById(`${prefix}-next`).textContent = 'Kein Spiel geplant';
+      listEl.innerHTML = '<div class="fix-row">Kein Spiel geplant</div>';
     }
 
-    // Last completed result (from /schedule)
+    // Last completed result across ALL competitions (with logos)
     const done = (past.events || []).filter(ev => ev.competitions?.[0]?.status?.type?.completed);
     done.sort((a, b) => new Date(b.date) - new Date(a.date));
     const lastEv = done[0];
@@ -1107,7 +1176,8 @@ async function loadClub(league, teamId, prefix) {
       const away = comp.competitors.find(c => c.homeAway === 'away');
       const hs = home.score?.displayValue ?? home.score ?? '-';
       const as = away.score?.displayValue ?? away.score ?? '-';
-      document.getElementById(`${prefix}-last`).textContent = `${home.team.shortDisplayName} ${hs} : ${as} ${away.team.shortDisplayName}`;
+      document.getElementById(`${prefix}-last`).innerHTML =
+        `<img class="comp-ico" src="${teamLogo(home)}" onerror="this.style.display='none'"> ${home.team.shortDisplayName} ${hs}:${as} ${away.team.shortDisplayName} <img class="comp-ico" src="${teamLogo(away)}" onerror="this.style.display='none'">`;
     }
   } catch (e) {}
 }
