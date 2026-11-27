@@ -417,6 +417,24 @@
   .down { color: var(--red); background: rgba(248, 113, 113, 0.16); }
   .flat { color: var(--muted); background: rgba(148, 163, 184, 0.16); }
 
+  .m-sigs {
+    display: flex;
+    gap: 0.28vw;
+    margin-top: 0.45vh;
+    flex-wrap: nowrap;
+  }
+  .sig-chip {
+    font-size: 1.05vh;
+    font-weight: 700;
+    padding: 0.18vh 0.34vw;
+    border-radius: 6px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .sig-K { color: #34d399; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.28); }
+  .sig-H { color: #fbbf24; background: rgba(251, 191, 36, 0.13); border: 1px solid rgba(251, 191, 36, 0.26); }
+  .sig-V { color: #f87171; background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.28); }
+
   /* Sports */
   .sports-split {
     display: grid;
@@ -824,16 +842,16 @@
 
   <div class="row-mid">
     <div class="card">
-      <div class="section-label"><span>MÄRKTE &amp; DEVISEN</span><span id="m-updated">Aktualisiere…</span></div>
+      <div class="section-label"><span>MÄRKTE &amp; DEVISEN · <span style="color:#34d399">K</span>=Kaufen <span style="color:#fbbf24">H</span>=Halten <span style="color:#f87171">V</span>=Verkaufen (1M/3M/1J)</span><span id="m-updated">Aktualisiere…</span></div>
       <div class="markets-grid">
-        <div class="m-tile" id="t-fxtry"><div class="m-head"><span class="m-name">EUR / USD</span><span class="m-sub">→ TRY</span></div><div class="m-price" style="font-size:2.55vh">-- / --</div><div class="m-chg flat">Live ₺</div></div>
-        <div class="m-tile" id="t-gold"><div class="m-head"><span class="m-name">Gold</span><span class="m-sub">€/g · 24K</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
-        <div class="m-tile" id="t-btc"><div class="m-head"><span class="m-name">Bitcoin</span><span class="m-sub">BTC/USD</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
-        <div class="m-tile" id="t-gspc"><div class="m-head"><span class="m-name">S&amp;P 500</span><span class="m-sub">^GSPC</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
-        <div class="m-tile" id="t-bist"><div class="m-head"><span class="m-name">BIST 100</span><span class="m-sub">XU100.IS</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
-        <div class="m-tile" id="t-vgwd"><div class="m-head"><span class="m-name">Vanguard Div</span><span class="m-sub">VGWD.DE</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
-        <div class="m-tile" id="t-spcx"><div class="m-head"><span class="m-name">SpaceX</span><span class="m-sub">SPCX</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
-        <div class="m-tile" id="t-ant"><div class="m-head"><span class="m-name">Anthropic</span><span class="m-sub">ANT</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+        <div class="m-tile" id="t-fxtry"><div class="m-head"><span class="m-name">EUR / USD</span><span class="m-sub">→ TRY</span></div><div class="m-price" style="font-size:2.4vh">-- / --</div><div class="m-chg flat">Live ₺</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-gold"><div class="m-head"><span class="m-name">Gold</span><span class="m-sub">€/g · 24K</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-btc"><div class="m-head"><span class="m-name">Bitcoin</span><span class="m-sub">BTC/USD</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-gspc"><div class="m-head"><span class="m-name">S&amp;P 500</span><span class="m-sub">^GSPC</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-bist"><div class="m-head"><span class="m-name">BIST 100</span><span class="m-sub">XU100.IS</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-vgwd"><div class="m-head"><span class="m-name">Vanguard Div</span><span class="m-sub">VGWD.DE</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-spcx"><div class="m-head"><span class="m-name">SpaceX</span><span class="m-sub">SPCX</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-ant"><div class="m-head"><span class="m-name">Anthropic</span><span class="m-sub">ANT</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
       </div>
     </div>
 
@@ -1022,18 +1040,48 @@ function wmoInfo(code) {
   return ['⛈️', 'Gewitter'];
 }
 
+function getMoonPhase() {
+  // Known new moon reference: 2000-01-06 18:14 UTC
+  const synodic = 29.53058867;
+  const days = (Date.now() - Date.UTC(2000, 0, 6, 18, 14)) / 86400000;
+  const phase = ((days % synodic) + synodic) % synodic / synodic;
+  const illum = Math.round((1 - Math.cos(phase * 2 * Math.PI)) * 50);
+  let ico = '🌑';
+  if (phase < 0.06 || phase >= 0.94) ico = '🌑';
+  else if (phase < 0.22) ico = '🌒';
+  else if (phase < 0.28) ico = '🌓';
+  else if (phase < 0.44) ico = '🌔';
+  else if (phase < 0.56) ico = '🌕';
+  else if (phase < 0.72) ico = '🌖';
+  else if (phase < 0.78) ico = '🌗';
+  else ico = '🌘';
+  return { ico, illum };
+}
+
 async function loadWeather() {
   try {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=50.9271&longitude=11.5892&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Berlin&forecast_days=6';
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=50.9271&longitude=11.5892&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&hourly=cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Berlin&forecast_days=6';
     const d = await (await fetch(url)).json();
     const c = d.current;
     const [ico, desc] = wmoInfo(c.weather_code);
     const temp = Math.round(c.temperature_2m);
+    const moon = getMoonPhase();
+
+    // Tonight's stargazing check (cloud cover around 22:00 local time)
+    let skyTag = '';
+    try {
+      const idx22 = (d.hourly?.time || []).findIndex(t => t.endsWith('T22:00'));
+      if (idx22 >= 0) {
+        const cc = d.hourly.cloud_cover[idx22];
+        skyTag = cc <= 25 ? '✨ Klar' : (cc <= 60 ? '🌌 Teils klar' : '☁️ Bewölkt');
+      }
+    } catch (e) {}
+
     document.getElementById('w-ico').textContent = ico;
     document.getElementById('w-temp').textContent = `${temp}°`;
     document.getElementById('w-desc').textContent = `${desc} · gefühlt ${Math.round(c.apparent_temperature)}°`;
-    document.getElementById('w-extra').textContent = `Wind ${Math.round(c.wind_speed_10m)} km/h · ${c.relative_humidity_2m}%`;
-    document.getElementById('amb-sub').textContent = `${ico} Jena ${temp}° · ${desc}`;
+    document.getElementById('w-extra').textContent = `${moon.ico} ${moon.illum}% · ${skyTag} · Wind ${Math.round(c.wind_speed_10m)} km/h`;
+    document.getElementById('amb-sub').textContent = `${ico} Jena ${temp}° · ${moon.ico} ${moon.illum}% ${skyTag}`;
 
     const daysEl = document.getElementById('w-days');
     daysEl.innerHTML = '';
@@ -1090,7 +1138,21 @@ async function loadMarketsSnapshot() {
   return {};
 }
 
+function setSignals(tileId, sig) {
+  const el = document.getElementById(tileId);
+  if (!el || !sig) return;
+  const box = el.querySelector('.m-sigs');
+  if (!box) return;
+  box.innerHTML =
+    `<span class="sig-chip sig-${sig.s}">1M:${sig.s}</span>` +
+    `<span class="sig-chip sig-${sig.m}">3M:${sig.m}</span>` +
+    `<span class="sig-chip sig-${sig.l}">1J:${sig.l}</span>`;
+}
+
 async function loadMarkets() {
+  // Load GitHub snapshot (contains 1M/3M/1J technical trend signals + fresh equity closes)
+  const snap = await loadMarketsSnapshot();
+
   // 1. FX (EUR/TRY & USD/TRY combined)
   try {
     const fx = await (await fetch('https://open.er-api.com/v6/latest/EUR')).json();
@@ -1100,6 +1162,7 @@ async function loadMarkets() {
       setTile('t-fxtry', `${eurTry.toFixed(2)} / ${usdTry.toFixed(2)} ₺`, null);
     }
   } catch (e) {}
+  if (snap['EURTRY=X']?.sig) setSignals('t-fxtry', snap['EURTRY=X'].sig);
 
   // 2. BTC + Gold
   try {
@@ -1107,6 +1170,8 @@ async function loadMarkets() {
     if (cg.bitcoin) setTile('t-btc', `$${Math.round(cg.bitcoin.usd).toLocaleString('de-DE')}`, cg.bitcoin.usd_24h_change);
     if (cg['pax-gold']) setTile('t-gold', `€${(cg['pax-gold'].eur / 31.1034768).toFixed(1)}/g`, cg['pax-gold'].eur_24h_change);
   } catch (e) {}
+  if (snap['GC=F']?.sig) setSignals('t-gold', snap['GC=F'].sig);
+  if (snap['BTC-USD']?.sig) setSignals('t-btc', snap['BTC-USD'].sig);
 
   // 3. Equities: render GitHub snapshot immediately so tiles are NEVER blank, then upgrade with live quotes
   const equities = [
@@ -1117,10 +1182,10 @@ async function loadMarkets() {
     ['ANT',      't-ant',  p => `$${p.toFixed(2)}`],
   ];
 
-  const snap = await loadMarketsSnapshot();
   for (const [sym, tileId, fmt] of equities) {
     if (snap && snap[sym] && snap[sym].price) {
       setTile(tileId, fmt(snap[sym].price), snap[sym].pct);
+      if (snap[sym].sig) setSignals(tileId, snap[sym].sig);
     }
   }
 
