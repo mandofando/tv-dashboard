@@ -1,7 +1,7 @@
 import json, urllib.request, urllib.parse, datetime
 
-SYMBOLS = ["^GSPC", "VGWD.DE", "SPCX", "ANT"]
-out = {"updated": datetime.datetime.utcnow().isoformat() + "Z"}
+SYMBOLS = ["^GSPC", "XU100.IS", "VGWD.DE", "SPCX", "ANT"]
+out = {"updated": datetime.datetime.now(datetime.timezone.utc).isoformat()}
 
 for sym in SYMBOLS:
     try:
