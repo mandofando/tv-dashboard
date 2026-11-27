@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ege TV Dashboard</title>
+<style>
+  :root {
+    --bg: #07090f;
+    --card: rgba(18, 24, 38, 0.86);
+    --card-border: rgba(148, 163, 184, 0.14);
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --gold: #fbbf24;
+    --green: #34d399;
+    --red: #f87171;
+    --gala: #eab308;
+    --gala-red: #dc2626;
+    --rbl: #ef4444;
+    --focus-ring: #38bdf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 10%, rgba(56, 189, 248, 0.10), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 90%, rgba(234, 179, 8, 0.08), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle pixel-shift wrapper for Mini-LED/OLED longevity */
+  #stage {
+    width: 100%;
+    height: 100%;
+    padding: 2.4vh 2.6vw;
+    display: grid;
+    grid-template-rows: 22vh 43vh 28vh;
+    gap: 1.8vh;
+    transition: transform 2s ease;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 1.6vh 1.6vw;
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .section-label {
+    font-size: 1.35vh;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1vh;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ROW 1: Clock + Weather + Pomodoro */
+  .row-top {
+    display: grid;
+    grid-template-columns: 1.15fr 1.55fr 1.25fr;
+    gap: 1.4vw;
+  }
+
+  .clock-card {
+    justify-content: center;
+  }
+  .clock-time {
+    font-size: 8.2vh;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .clock-sec {
+    font-size: 3.2vh;
+    color: var(--accent);
+    font-weight: 500;
+    margin-left: 0.4vw;
+  }
+  .clock-date {
+    font-size: 2.1vh;
+    color: var(--muted);
+    margin-top: 1vh;
+    font-weight: 500;
+  }
+
+  /* Weather */
+  .weather-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    gap: 1.2vw;
+  }
+  .weather-now {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+  }
+  .weather-icon { font-size: 5.8vh; line-height: 1; }
+  .weather-temp {
+    font-size: 5.4vh;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .weather-desc {
+    font-size: 1.65vh;
+    color: var(--muted);
+    margin-top: 0.4vh;
+  }
+  .weather-days {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.55vw;
+    flex: 1;
+  }
+  .w-day {
+    background: rgba(255,255,255,0.035);
+    border-radius: 12px;
+    padding: 0.9vh 0.4vw;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4vh;
+  }
+  .w-day-name { font-size: 1.35vh; color: var(--muted); font-weight: 600; }
+  .w-day-ico { font-size: 2.4vh; }
+  .w-day-t { font-size: 1.45vh; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .w-day-lo { color: var(--muted); font-weight: 400; }
+
+  /* Pomodoro */
+  .pomo-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    gap: 1vw;
+  }
+  .pomo-time {
+    font-size: 5.4vh;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .pomo-status {
+    font-size: 1.45vh;
+    color: var(--accent);
+    margin-top: 0.5vh;
+    font-weight: 600;
+  }
+  .pomo-btns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.7vh 0.5vw;
+  }
+  .btn {
+    background: rgba(255,255,255,0.07);
+    border: 2px solid transparent;
+    color: var(--text);
+    border-radius: 10px;
+    padding: 0.85vh 0.9vw;
+    font-size: 1.5vh;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn.active {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #fff;
+  }
+  .btn.focused, .btn:focus {
+    outline: none;
+    border-color: var(--focus-ring);
+    background: rgba(56, 189, 248, 0.30);
+    transform: scale(1.04);
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+  }
+
+  /* ROW 2: Markets (left) + Sports (right) */
+  .row-mid {
+    display: grid;
+    grid-template-columns: 1.75fr 1.25fr;
+    gap: 1.4vw;
+  }
+
+  .markets-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1.1vh 0.85vw;
+    flex: 1;
+  }
+  .m-tile {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 1.3vh 1vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .m-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .m-name {
+    font-size: 1.65vh;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+  .m-sub {
+    font-size: 1.25vh;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .m-price {
+    font-size: 3.1vh;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    margin: 0.4vh 0;
+  }
+  .m-chg {
+    font-size: 1.45vh;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3vw;
+    padding: 0.25vh 0.55vw;
+    border-radius: 999px;
+    width: fit-content;
+    font-variant-numeric: tabular-nums;
+  }
+  .up { color: var(--green); background: rgba(52, 211, 153, 0.14); }
+  .down { color: var(--red); background: rgba(248, 113, 113, 0.14); }
+  .flat { color: var(--muted); background: rgba(148, 163, 184, 0.14); }
+
+  /* Sports */
+  .sports-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1vw;
+    flex: 1;
+  }
+  .club-card {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 1.4vh 1.1vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .club-card.gala { border-top: 3px solid var(--gala); }
+  .club-card.rbl { border-top: 3px solid var(--rbl); }
+  .club-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6vw;
+  }
+  .club-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6vw;
+  }
+  .club-logo {
+    width: 4.2vh;
+    height: 4.2vh;
+    object-fit: contain;
+  }
+  .club-name {
+    font-size: 2.1vh;
+    font-weight: 800;
+  }
+  .club-rank {
+    font-size: 1.5vh;
+    font-weight: 700;
+    padding: 0.35vh 0.65vw;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    color: var(--gold);
+    white-space: nowrap;
+  }
+  .club-block {
+    background: rgba(0,0,0,0.22);
+    border-radius: 10px;
+    padding: 1vh 0.8vw;
+    margin-top: 0.8vh;
+  }
+  .club-tag {
+    font-size: 1.2vh;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 0.4vh;
+  }
+  .club-match {
+    font-size: 1.85vh;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .club-meta {
+    font-size: 1.45vh;
+    color: var(--accent);
+    margin-top: 0.35vh;
+    font-weight: 600;
+  }
+
+  /* ROW 3: German News (Türkei | Deutschland | Wirtschaft & Welt) */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2vw;
+    flex: 1;
+    overflow: hidden;
+  }
+  .news-col {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 1.1vh 1vw;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8vh;
+    overflow: hidden;
+  }
+  .news-col-head {
+    font-size: 1.45vh;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.45vw;
+  }
+  .news-col-head.tr { color: #f87171; }
+  .news-col-head.de { color: #fbbf24; }
+  .news-col-head.welt { color: #38bdf8; }
+  .news-item {
+    font-size: 1.72vh;
+    line-height: 1.32;
+    color: #e2e8f0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding-bottom: 0.6vh;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .news-time {
+    color: var(--muted);
+    font-size: 1.35vh;
+    font-weight: 600;
+    margin-right: 0.4vw;
+  }
+
+  /* AMBIENT MODE */
+  body.ambient #stage > *:not(.ambient-overlay) { display: none; }
+  .ambient-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5vh;
+    z-index: 50;
+  }
+  body.ambient .ambient-overlay { display: flex; }
+  .amb-clock {
+    font-size: 19vh;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    color: #f8fafc;
+    line-height: 1;
+  }
+  .amb-sub {
+    font-size: 3.4vh;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .amb-pomo {
+    font-size: 4.5vh;
+    color: var(--accent);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .amb-hint {
+    position: fixed;
+    bottom: 3vh;
+    font-size: 1.6vh;
+    color: rgba(148,163,184,0.45);
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- TOP ROW -->
+  <div class="row-top">
+    <div class="card clock-card">
+      <div class="section-label"><span>JENA · MEZ</span><span id="sync-dot">● LIVE</span></div>
+      <div><span class="clock-time" id="clock-hm">--:--</span><span class="clock-sec" id="clock-s">--</span></div>
+      <div class="clock-date" id="clock-date">Lade Datum…</div>
+    </div>
+
+    <div class="card">
+      <div class="section-label"><span>WETTER · JENA</span><span id="w-extra"></span></div>
+      <div class="weather-main">
+        <div class="weather-now">
+          <div class="weather-icon" id="w-ico">⛅</div>
+          <div>
+            <div class="weather-temp" id="w-temp">--°</div>
+            <div class="weather-desc" id="w-desc">Lade…</div>
+          </div>
+        </div>
+        <div class="weather-days" id="w-days"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label"><span>FOKUS · POMODORO</span><span>◄ ► + OK</span></div>
+      <div class="pomo-wrap">
+        <div>
+          <div class="pomo-time" id="pomo-display">25:00</div>
+          <div class="pomo-status" id="pomo-status">Bereit</div>
+        </div>
+        <div class="pomo-btns">
+          <button class="btn focused" data-action="toggle" id="btn-toggle">▶ Start</button>
+          <button class="btn" data-action="reset">↺ Reset</button>
+          <button class="btn" data-action="preset">⏱ 25 / 50 / 5</button>
+          <button class="btn" data-action="ambient">🌙 Ambient</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIDDLE ROW -->
+  <div class="row-mid">
+    <div class="card">
+      <div class="section-label"><span>MÄRKTE &amp; DEVISEN</span><span id="m-updated">Aktualisiere…</span></div>
+      <div class="markets-grid" id="markets-grid">
+        <div class="m-tile" id="t-eurtry"><div class="m-head"><span class="m-name">EUR / TRY</span><span class="m-sub">FX</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+        <div class="m-tile" id="t-usdtry"><div class="m-head"><span class="m-name">USD / TRY</span><span class="m-sub">FX</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+        <div class="m-tile" id="t-gold"><div class="m-head"><span class="m-name">Gold</span><span class="m-sub">€/g · 24K</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+        <div class="m-tile" id="t-btc"><div class="m-head"><span class="m-name">Bitcoin</span><span class="m-sub">BTC/USD</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+        <div class="m-tile" id="t-gspc"><div class="m-head"><span class="m-name">S&amp;P 500</span><span class="m-sub">^GSPC</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+        <div class="m-tile" id="t-vgwd"><div class="m-head"><span class="m-name">Vanguard Div</span><span class="m-sub">VGWD.DE</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+        <div class="m-tile" id="t-spcx"><div class="m-head"><span class="m-name">SpaceX</span><span class="m-sub">SPCX</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+        <div class="m-tile" id="t-ant"><div class="m-head"><span class="m-name">Anthropic</span><span class="m-sub">ANT</span></div><div class="m-price">--</div><div class="m-chg flat">…</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label"><span>FUSSBALL · LIVE-ÜBERBLICK</span><span>SÜPER LİG &amp; BUNDESLIGA</span></div>
+      <div class="sports-split">
+        <div class="club-card gala" id="club-gala">
+          <div class="club-top">
+            <div class="club-title">
+              <img class="club-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/432.png" alt="GS">
+              <div class="club-name">Galatasaray</div>
+            </div>
+            <div class="club-rank" id="gala-rank">--</div>
+          </div>
+          <div class="club-block">
+            <div class="club-tag">Nächstes Spiel</div>
+            <div class="club-match" id="gala-next">Lade Spielplan…</div>
+            <div class="club-meta" id="gala-next-time"></div>
+          </div>
+          <div class="club-block">
+            <div class="club-tag">Letztes Ergebnis</div>
+            <div class="club-match" id="gala-last">--</div>
+          </div>
+        </div>
+
+        <div class="club-card rbl" id="club-rbl">
+          <div class="club-top">
+            <div class="club-title">
+              <img class="club-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/11420.png" alt="RBL">
+              <div class="club-name">RB Leipzig</div>
+            </div>
+            <div class="club-rank" id="rbl-rank">--</div>
+          </div>
+          <div class="club-block">
+            <div class="club-tag">Nächstes Spiel</div>
+            <div class="club-match" id="rbl-next">Lade Spielplan…</div>
+            <div class="club-meta" id="rbl-next-time"></div>
+          </div>
+          <div class="club-block">
+            <div class="club-tag">Letztes Ergebnis</div>
+            <div class="club-match" id="rbl-last">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW: NEWS -->
+  <div class="card">
+    <div class="section-label"><span>NACHRICHTEN · TAGESSCHAU (DE)</span><span id="news-updated">Türkei · Deutschland · Wirtschaft &amp; Welt</span></div>
+    <div class="news-grid">
+      <div class="news-col">
+        <div class="news-col-head tr">🇹🇷 Türkei</div>
+        <div id="news-tr"><div class="news-item">Lade Nachrichten…</div></div>
+      </div>
+      <div class="news-col">
+        <div class="news-col-head de">🇩🇪 Deutschland</div>
+        <div id="news-de"><div class="news-item">Lade Nachrichten…</div></div>
+      </div>
+      <div class="news-col">
+        <div class="news-col-head welt">🌍 Wirtschaft &amp; Welt</div>
+        <div id="news-welt"><div class="news-item">Lade Nachrichten…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AMBIENT OVERLAY -->
+<div class="ambient-overlay" id="ambient-overlay">
+  <div class="amb-clock" id="amb-clock">--:--</div>
+  <div class="amb-sub" id="amb-sub">Jena</div>
+  <div class="amb-pomo" id="amb-pomo"></div>
+  <div class="amb-hint">OK oder Zurück drücken zum Verlassen</div>
+</div>
+
+<script>
+// ==================== 1. CLOCK ====================
+const DAYS_DE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const DAYS_SHORT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('clock-hm').textContent = `${hh}:${mm}`;
+  document.getElementById('clock-s').textContent = ss;
+  document.getElementById('amb-clock').textContent = `${hh}:${mm}`;
+  const dateStr = `${DAYS_DE[now.getDay()]}, ${now.getDate()}. ${MONTHS_DE[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('clock-date').textContent = dateStr;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// Subtle pixel shift every 5 minutes
+let shiftIdx = 0;
+const shifts = [[0,0],[3,2],[-3,2],[-2,-3],[2,-2]];
+setInterval(() => {
+  shiftIdx = (shiftIdx + 1) % shifts.length;
+  const [x, y] = shifts[shiftIdx];
+  document.getElementById('stage').style.transform = `translate(${x}px, ${y}px)`;
+}, 300000);
+
+// ==================== 2. WEATHER (OPEN-METEO JENA) ====================
+function wmoInfo(code) {
+  if (code === 0) return ['☀️', 'Klar'];
+  if (code <= 2) return ['⛅', 'Leicht bewölkt'];
+  if (code === 3) return ['☁️', 'Bewölkt'];
+  if (code <= 48) return ['🌫️', 'Nebel'];
+  if (code <= 57) return ['🌦️', 'Nieselregen'];
+  if (code <= 67) return ['🌧️', 'Regen'];
+  if (code <= 77) return ['❄️', 'Schnee'];
+  if (code <= 82) return ['🌧️', 'Schauer'];
+  if (code <= 86) return ['🌨️', 'Schneeschauer'];
+  return ['⛈️', 'Gewitter'];
+}
+
+let lastWeatherSummary = 'Jena';
+async function loadWeather() {
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=50.9271&longitude=11.5892&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Berlin&forecast_days=6';
+    const r = await fetch(url);
+    const d = await r.json();
+    const c = d.current;
+    const [ico, desc] = wmoInfo(c.weather_code);
+    const temp = Math.round(c.temperature_2m);
+    document.getElementById('w-ico').textContent = ico;
+    document.getElementById('w-temp').textContent = `${temp}°`;
+    document.getElementById('w-desc').textContent = `${desc} · gefühlt ${Math.round(c.apparent_temperature)}°`;
+    document.getElementById('w-extra').textContent = `Wind ${Math.round(c.wind_speed_10m)} km/h · ${c.relative_humidity_2m}%`;
+    lastWeatherSummary = `${ico} Jena ${temp}° · ${desc}`;
+    document.getElementById('amb-sub').textContent = lastWeatherSummary;
+
+    const daysEl = document.getElementById('w-days');
+    daysEl.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      const dt = new Date(d.daily.time[i] + 'T12:00:00');
+      const [dIco] = wmoInfo(d.daily.weather_code[i]);
+      const hi = Math.round(d.daily.temperature_2m_max[i]);
+      const lo = Math.round(d.daily.temperature_2m_min[i]);
+      daysEl.innerHTML += `<div class="w-day"><div class="w-day-name">${DAYS_SHORT[dt.getDay()]}</div><div class="w-day-ico">${dIco}</div><div class="w-day-t">${hi}° <span class="w-day-lo">${lo}°</span></div></div>`;
+    }
+  } catch (e) {}
+}
+
+// ==================== 3. MARKETS & FX ====================
+function setTile(id, priceText, pct) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.querySelector('.m-price').textContent = priceText;
+  const chg = el.querySelector('.m-chg');
+  if (pct === null || pct === undefined || Number.isNaN(pct)) {
+    chg.className = 'm-chg flat';
+    chg.textContent = 'Live';
+  } else {
+    const sign = pct > 0 ? '+' : '';
+    chg.className = 'm-chg ' + (pct > 0.01 ? 'up' : pct < -0.01 ? 'down' : 'flat');
+    chg.textContent = `${pct >= 0 ? '▲' : '▼'} ${sign}${pct.toFixed(2)}%`;
+  }
+}
+
+async function fetchYahooQuote(symbol) {
+  const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
+  const r = await fetch(`https://api.cors.lol/?url=${encodeURIComponent(target)}`);
+  const j = await r.json();
+  const meta = j.chart.result[0].meta;
+  const price = meta.regularMarketPrice;
+  const prev = meta.chartPreviousClose || meta.previousClose;
+  const pct = prev ? ((price - prev) / prev) * 100 : null;
+  return { price, pct, currency: meta.currency };
+}
+
+async function loadMarkets() {
+  // 1. FX (EUR/TRY, USD/TRY)
+  try {
+    const fx = await (await fetch('https://open.er-api.com/v6/latest/EUR')).json();
+    if (fx && fx.rates) {
+      const eurTry = fx.rates.TRY;
+      const usdTry = fx.rates.TRY / fx.rates.USD;
+      setTile('t-eurtry', `${eurTry.toFixed(2)} ₺`, null);
+      setTile('t-usdtry', `${usdTry.toFixed(2)} ₺`, null);
+    }
+  } catch (e) {}
+
+  // 2. BTC + Gold (EUR/g from PAXG troy oz / 31.1035)
+  try {
+    const cg = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,pax-gold&vs_currencies=usd,eur&include_24hr_change=true')).json();
+    if (cg.bitcoin) {
+      setTile('t-btc', `$${Math.round(cg.bitcoin.usd).toLocaleString('de-DE')}`, cg.bitcoin.usd_24h_change);
+    }
+    if (cg['pax-gold']) {
+      const eurPerGram = cg['pax-gold'].eur / 31.1034768;
+      setTile('t-gold', `€${eurPerGram.toFixed(1)}/g`, cg['pax-gold'].eur_24h_change);
+    }
+  } catch (e) {}
+
+  // 3. Equities: try live Yahoo via CORS proxy, fallback to local markets.json (updated by GitHub Actions)
+  let fallback = null;
+  async function getFallback() {
+    if (fallback !== null) return fallback;
+    try {
+      fallback = await (await fetch('./markets.json?t=' + Date.now())).json();
+    } catch (e) { fallback = {}; }
+    return fallback;
+  }
+
+  const equities = [
+    ['^GSPC', 't-gspc', p => Math.round(p).toLocaleString('de-DE')],
+    ['VGWD.DE', 't-vgwd', p => `€${p.toFixed(2)}`],
+    ['SPCX', 't-spcx', p => `$${p.toFixed(2)}`],
+    ['ANT', 't-ant', p => `$${p.toFixed(2)}`],
+  ];
+
+  await Promise.all(equities.map(async ([sym, tileId, fmt]) => {
+    try {
+      const q = await fetchYahooQuote(sym);
+      setTile(tileId, fmt(q.price), q.pct);
+    } catch (e) {
+      const fb = await getFallback();
+      if (fb && fb[sym]) {
+        setTile(tileId, fmt(fb[sym].price), fb[sym].pct);
+      }
+    }
+  }));
+
+  const now = new Date();
+  document.getElementById('m-updated').textContent = `Stand ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+}
+
+// ==================== 4. SPORTS (GALATASARAY & RB LEIPZIG) ====================
+async function loadClub(league, teamId, prefix) {
+  try {
+    const [schedRes, standRes] = await Promise.all([
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule`),
+      fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${league}/standings`)
+    ]);
+    const sched = await schedRes.json();
+    const stand = await standRes.json();
+
+    // Rank & Points
+    try {
+      const entries = stand.children[0].standings.entries;
+      const entry = entries.find(e => String(e.team.id) === String(teamId));
+      if (entry) {
+        const rank = entry.stats.find(s => s.name === 'rank')?.displayValue || '?';
+        const pts = entry.stats.find(s => s.name === 'points')?.displayValue || '?';
+        document.getElementById(`${prefix}-rank`).textContent = `#${rank} · ${pts} Pkt`;
+      }
+    } catch (e) {}
+
+    // Events: find last completed & next scheduled
+    const events = sched.events || [];
+    const nowMs = Date.now();
+    let lastEv = null;
+    let nextEv = null;
+    for (const ev of events) {
+      const comp = ev.competitions && ev.competitions[0];
+      if (!comp) continue;
+      const completed = comp.status && comp.status.type && comp.status.type.completed;
+      const evTime = new Date(ev.date).getTime();
+      if (completed) {
+        if (!lastEv || evTime > new Date(lastEv.date).getTime()) lastEv = ev;
+      } else if (evTime >= nowMs - 3600000 * 3) {
+        if (!nextEv || evTime < new Date(nextEv.date).getTime()) nextEv = ev;
+      }
+    }
+
+    if (nextEv) {
+      const comp = nextEv.competitions[0];
+      const home = comp.competitors.find(c => c.homeAway === 'home');
+      const away = comp.competitors.find(c => c.homeAway === 'away');
+      document.getElementById(`${prefix}-next`).textContent = `${home.team.shortDisplayName} vs ${away.team.shortDisplayName}`;
+      const dt = new Date(nextEv.date);
+      const dayStr = `${DAYS_SHORT[dt.getDay()]} ${dt.getDate()}.${dt.getMonth()+1}. · ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+      document.getElementById(`${prefix}-next-time`).textContent = dayStr;
+    } else {
+      document.getElementById(`${prefix}-next`).textContent = 'Kein Spiel geplant';
+    }
+
+    if (lastEv) {
+      const comp = lastEv.competitions[0];
+      const home = comp.competitors.find(c => c.homeAway === 'home');
+      const away = comp.competitors.find(c => c.homeAway === 'away');
+      const hs = home.score?.displayValue ?? home.score ?? '-';
+      const as = away.score?.displayValue ?? away.score ?? '-';
+      document.getElementById(`${prefix}-last`).textContent = `${home.team.shortDisplayName} ${hs} : ${as} ${away.team.shortDisplayName}`;
+    }
+  } catch (e) {}
+}
+
+// ==================== 5. GERMAN NEWS (TAGESSCHAU API) ====================
+const newsPools = { tr: [], de: [], welt: [] };
+let newsOffset = 0;
+
+function formatNewsTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function renderNewsCol(elId, items) {
+  const el = document.getElementById(elId);
+  if (!items || !items.length) return;
+  const shown = [];
+  for (let i = 0; i < Math.min(3, items.length); i++) {
+    shown.push(items[(newsOffset + i) % items.length]);
+  }
+  el.innerHTML = shown.map(n => `<div class="news-item"><span class="news-time">${formatNewsTime(n.date)}</span>${n.title}</div>`).join('');
+}
+
+async function loadNews() {
+  try {
+    const [trR, deR, wiR, auR] = await Promise.all([
+      fetch('https://www.tagesschau.de/api2u/search/?searchText=T%C3%BCrkei&pageSize=8'),
+      fetch('https://www.tagesschau.de/api2u/news/?ressort=inland'),
+      fetch('https://www.tagesschau.de/api2u/news/?ressort=wirtschaft'),
+      fetch('https://www.tagesschau.de/api2u/news/?ressort=ausland')
+    ]);
+    const trJ = await trR.json();
+    const deJ = await deR.json();
+    const wiJ = await wiR.json();
+    const auJ = await auR.json();
+
+    newsPools.tr = (trJ.searchResults || []).filter(x => x.title).slice(0, 8);
+    newsPools.de = (deJ.news || []).filter(x => x.title).slice(0, 9);
+    const wi = (wiJ.news || []).filter(x => x.title).slice(0, 5);
+    const au = (auJ.news || []).filter(x => x.title).slice(0, 5);
+    newsPools.welt = [...wi, ...au];
+
+    renderNewsCol('news-tr', newsPools.tr);
+    renderNewsCol('news-de', newsPools.de);
+    renderNewsCol('news-welt', newsPools.welt);
+  } catch (e) {}
+}
+
+setInterval(() => {
+  newsOffset += 1;
+  renderNewsCol('news-tr', newsPools.tr);
+  renderNewsCol('news-de', newsPools.de);
+  renderNewsCol('news-welt', newsPools.welt);
+}, 14000);
+
+// ==================== 6. POMODORO & TV REMOTE CONTROL ====================
+const presets = [
+  { mins: 25, label: 'Fokus 25m' },
+  { mins: 50, label: 'Deep Work 50m' },
+  { mins: 5,  label: 'Pause 5m' }
+];
+let presetIdx = 0;
+let remaining = presets[0].mins * 60;
+let running = false;
+let pomoTimer = null;
+
+function renderPomo() {
+  const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+  const s = String(remaining % 60).padStart(2, '0');
+  document.getElementById('pomo-display').textContent = `${m}:${s}`;
+  document.getElementById('btn-toggle').textContent = running ? '⏸ Pause' : '▶ Start';
+  document.getElementById('pomo-status').textContent = running ? `${presets[presetIdx].label} läuft…` : `${presets[presetIdx].label} · Bereit`;
+  document.getElementById('amb-pomo').textContent = running ? `⏱ ${m}:${s} · ${presets[presetIdx].label}` : '';
+}
+
+function togglePomo() {
+  running = !running;
+  if (running) {
+    pomoTimer = setInterval(() => {
+      if (remaining > 0) {
+        remaining--;
+        renderPomo();
+      } else {
+        running = false;
+        clearInterval(pomoTimer);
+        document.getElementById('pomo-status').textContent = '✓ Fertig!';
+        renderPomo();
+      }
+    }, 1000);
+  } else {
+    clearInterval(pomoTimer);
+  }
+  renderPomo();
+}
+
+function resetPomo() {
+  running = false;
+  clearInterval(pomoTimer);
+  remaining = presets[presetIdx].mins * 60;
+  renderPomo();
+}
+
+function cyclePreset() {
+  presetIdx = (presetIdx + 1) % presets.length;
+  resetPomo();
+}
+
+function toggleAmbient() {
+  document.body.classList.toggle('ambient');
+}
+
+const buttons = Array.from(document.querySelectorAll('.btn'));
+let focusIdx = 0;
+function updateFocus() {
+  buttons.forEach((b, i) => b.classList.toggle('focused', i === focusIdx));
+}
+function triggerBtn(btn) {
+  const act = btn.dataset.action;
+  if (act === 'toggle') togglePomo();
+  else if (act === 'reset') resetPomo();
+  else if (act === 'preset') cyclePreset();
+  else if (act === 'ambient') toggleAmbient();
+}
+buttons.forEach((b, i) => b.addEventListener('click', () => { focusIdx = i; updateFocus(); triggerBtn(b); }));
+
+document.addEventListener('keydown', (e) => {
+  if (document.body.classList.contains('ambient')) {
+    if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Backspace' || e.keyCode === 10009 || e.keyCode === 13) {
+      toggleAmbient();
+    }
+    return;
+  }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    focusIdx = (focusIdx + 1) % buttons.length;
+    updateFocus();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    focusIdx = (focusIdx - 1 + buttons.length) % buttons.length;
+    updateFocus();
+  } else if (e.key === 'Enter' || e.keyCode === 13) {
+    triggerBtn(buttons[focusIdx]);
+  } else if (e.keyCode === 415 || e.keyCode === 19 || e.keyCode === 10252) {
+    togglePomo();
+  }
+});
+
+renderPomo();
+
+// ==================== 7. INITIAL LOAD & AUTO-REFRESH ====================
+function refreshAll() {
+  loadWeather();
+  loadMarkets();
+  loadClub('tur.1', 432, 'gala');
+  loadClub('ger.1', 11420, 'rbl');
+  loadNews();
+}
+refreshAll();
+setInterval(loadMarkets, 300000);   // every 5 min
+setInterval(loadWeather, 900000);   // every 15 min
+setInterval(loadNews, 600000);      // every 10 min
+setInterval(() => {
+  loadClub('tur.1', 432, 'gala');
+  loadClub('ger.1', 11420, 'rbl');
+}, 900000);
+</script>
+</body>
+</html>
