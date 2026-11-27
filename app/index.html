@@ -1301,7 +1301,23 @@ const SpotifyConnect = (() => {
 
   async function togglePlay() {
     if (!clientId || !refreshToken) {
-      const cid = prompt('Spotify Client ID eingeben (aus developer.spotify.com):', clientId || '');
+      // First try 1-click auto-pair from local PC helper (zero typing on TV remote!)
+      for (const host of ['192.168.178.138:8888', '127.0.0.1:8888']) {
+        try {
+          const r = await fetch(`http://${host}/token.json`);
+          if (r.ok) {
+            const j = await r.json();
+            if (j.client_id && j.refresh_token) {
+              clientId = j.client_id; refreshToken = j.refresh_token;
+              localStorage.setItem('sp_client_id', clientId);
+              localStorage.setItem('sp_refresh_token', refreshToken);
+              poll();
+              return;
+            }
+          }
+        } catch (e) {}
+      }
+      const cid = prompt('Spotify Client ID eingeben:', clientId || '');
       const rt = cid ? prompt('Spotify Refresh Token eingeben:', refreshToken || '') : '';
       if (cid && rt) {
         clientId = cid.trim(); refreshToken = rt.trim();
