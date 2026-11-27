@@ -853,14 +853,14 @@
     <div class="card">
       <div class="section-label"><span>MÄRKTE &amp; DEVISEN · <span style="color:#34d399">K</span>=Kaufen <span style="color:#fbbf24">H</span>=Halten <span style="color:#f87171">V</span>=Verkaufen (1M/3M/1J)</span><span id="m-updated">Aktualisiere…</span></div>
       <div class="markets-grid">
-        <div class="m-tile" id="t-fxtry"><div class="m-head"><span class="m-name">EUR / USD</span><span class="m-sub">→ TRY</span></div><div class="m-price" style="font-size:2.4vh">-- / --</div><div class="m-chg flat">Live ₺</div><div class="m-sigs"></div></div>
-        <div class="m-tile" id="t-gold"><div class="m-head"><span class="m-name">Gold</span><span class="m-sub">€/g · 24K</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
-        <div class="m-tile" id="t-btc"><div class="m-head"><span class="m-name">Bitcoin</span><span class="m-sub">BTC/USD</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-fxtry"><div class="m-head"><span class="m-name">EUR / USD</span><span class="m-sub">→ TRY</span></div><div class="m-price" style="font-size:2.05vh">-- / --</div><div class="m-chg flat">Live ₺</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-metals"><div class="m-head"><span class="m-name">Gold / Silber</span><span class="m-sub">€/g</span></div><div class="m-price" style="font-size:2.05vh">-- / --</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-crypto"><div class="m-head"><span class="m-name">BTC / ETH / SOL</span><span class="m-sub">USD</span></div><div class="m-price" style="font-size:1.72vh">-- / -- / --</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
         <div class="m-tile" id="t-gspc"><div class="m-head"><span class="m-name">S&amp;P 500</span><span class="m-sub">^GSPC</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
         <div class="m-tile" id="t-bist"><div class="m-head"><span class="m-name">BIST 100</span><span class="m-sub">XU100.IS</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
         <div class="m-tile" id="t-vgwd"><div class="m-head"><span class="m-name">Vanguard Div</span><span class="m-sub">VGWD.DE</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
-        <div class="m-tile" id="t-spcx"><div class="m-head"><span class="m-name">SpaceX</span><span class="m-sub">SPCX</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
-        <div class="m-tile" id="t-ant"><div class="m-head"><span class="m-name">Anthropic</span><span class="m-sub">ANT</span></div><div class="m-price">--</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-spant"><div class="m-head"><span class="m-name">SpaceX / Anthr.</span><span class="m-sub">SPCX/ANT</span></div><div class="m-price" style="font-size:2.05vh">-- / --</div><div class="m-chg flat">…</div><div class="m-sigs"></div></div>
+        <div class="m-tile" id="t-bonds"><div class="m-head"><span class="m-name">Bonds US/EU/CN</span><span class="m-sub">IEF/EUNH/CBON</span></div><div class="m-price" style="font-size:1.75vh">-- / -- / --</div><div class="m-chg flat">10Y …</div><div class="m-sigs"></div></div>
       </div>
     </div>
 
@@ -1138,8 +1138,8 @@ function setSignals(tileId, sig) {
 }
 
 async function loadMarkets() {
-  // Load GitHub snapshot (contains 1M/3M/1J technical trend signals + fresh equity closes)
   const snap = await loadMarketsSnapshot();
+  const eurUsd = snap['EURUSD=X']?.price || 1.10;
 
   // 1. FX (EUR/TRY & USD/TRY combined)
   try {
@@ -1152,32 +1152,63 @@ async function loadMarkets() {
   } catch (e) {}
   if (snap['EURTRY=X']?.sig) setSignals('t-fxtry', snap['EURTRY=X'].sig);
 
-  // 2. BTC + Gold
-  try {
-    const cg = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,pax-gold&vs_currencies=usd,eur&include_24hr_change=true')).json();
-    if (cg.bitcoin) setTile('t-btc', `$${Math.round(cg.bitcoin.usd).toLocaleString('de-DE')}`, cg.bitcoin.usd_24h_change);
-    if (cg['pax-gold']) setTile('t-gold', `€${(cg['pax-gold'].eur / 31.1034768).toFixed(1)}/g`, cg['pax-gold'].eur_24h_change);
-  } catch (e) {}
-  if (snap['GC=F']?.sig) setSignals('t-gold', snap['GC=F'].sig);
-  if (snap['BTC-USD']?.sig) setSignals('t-btc', snap['BTC-USD'].sig);
+  // 2. Gold + Silver (€/g) & 3. Crypto (BTC / ETH / SOL)
+  const fmtK = v => v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${Math.round(v)}`;
+  let goldEurG = snap['GC=F']?.price ? (snap['GC=F'].price / eurUsd / 31.1034768) : null;
+  let silverEurG = snap['SI=F']?.price ? (snap['SI=F'].price / eurUsd / 31.1034768) : null;
+  if (goldEurG && silverEurG) setTile('t-metals', `€${goldEurG.toFixed(1)} / €${silverEurG.toFixed(2)}`, snap['GC=F']?.pct);
+  if (snap['GC=F']?.sig) setSignals('t-metals', snap['GC=F'].sig);
 
-  // 3. Equities: render GitHub snapshot immediately so tiles are NEVER blank, then upgrade with live quotes
+  if (snap['BTC-USD']?.price && snap['ETH-USD']?.price && snap['SOL-USD']?.price) {
+    setTile('t-crypto', `${fmtK(snap['BTC-USD'].price)} / ${fmtK(snap['ETH-USD'].price)} / ${fmtK(snap['SOL-USD'].price)}`, snap['BTC-USD'].pct);
+  }
+  if (snap['BTC-USD']?.sig) setSignals('t-crypto', snap['BTC-USD'].sig);
+
+  try {
+    const cg = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,pax-gold&vs_currencies=usd,eur&include_24hr_change=true')).json();
+    if (cg.bitcoin && cg.ethereum && cg.solana) {
+      setTile('t-crypto', `${fmtK(cg.bitcoin.usd)} / ${fmtK(cg.ethereum.usd)} / ${fmtK(cg.solana.usd)}`, cg.bitcoin.usd_24h_change);
+    }
+    if (cg['pax-gold']) {
+      goldEurG = cg['pax-gold'].eur / 31.1034768;
+      const silTxt = silverEurG ? `€${silverEurG.toFixed(2)}` : '--';
+      setTile('t-metals', `€${goldEurG.toFixed(1)} / ${silTxt}`, cg['pax-gold'].eur_24h_change);
+    }
+  } catch (e) {}
+
+  // 4-6. Single equities (S&P 500, BIST 100, Vanguard Div)
   const equities = [
     ['^GSPC',    't-gspc', p => Math.round(p).toLocaleString('de-DE')],
     ['XU100.IS', 't-bist', p => Math.round(p).toLocaleString('de-DE')],
     ['VGWD.DE',  't-vgwd', p => `€${p.toFixed(2)}`],
-    ['SPCX',     't-spcx', p => `$${p.toFixed(2)}`],
-    ['ANT',      't-ant',  p => `$${p.toFixed(2)}`],
   ];
-
   for (const [sym, tileId, fmt] of equities) {
-    if (snap && snap[sym] && snap[sym].price) {
+    if (snap?.[sym]?.price) {
       setTile(tileId, fmt(snap[sym].price), snap[sym].pct);
       if (snap[sym].sig) setSignals(tileId, snap[sym].sig);
     }
   }
 
-  // Upgrade with live Yahoo quotes in background
+  // 7. Combined SpaceX / Anthropic
+  if (snap?.['SPCX']?.price && snap?.['ANT']?.price) {
+    setTile('t-spant', `$${snap['SPCX'].price.toFixed(1)} / $${snap['ANT'].price.toFixed(1)}`, snap['SPCX'].pct);
+    if (snap['SPCX'].sig) setSignals('t-spant', snap['SPCX'].sig);
+  }
+
+  // 8. Sovereign Bonds: US (IEF) / EU (EUNH.DE) / CN (CBON) + 10Y Yields
+  if (snap?.['IEF']?.price && snap?.['EUNH.DE']?.price && snap?.['CBON']?.price) {
+    const bEl = document.getElementById('t-bonds');
+    bEl.querySelector('.m-price').textContent =
+      `$${snap['IEF'].price.toFixed(0)} / €${snap['EUNH.DE'].price.toFixed(0)} / $${snap['CBON'].price.toFixed(1)}`;
+    const usY = snap['^TNX']?.price ? `US ${snap['^TNX'].price.toFixed(2)}%` : '';
+    const euY = snap['EU10Y']?.price ? `EU ${snap['EU10Y'].price.toFixed(2)}%` : '';
+    const chg = bEl.querySelector('.m-chg');
+    chg.className = 'm-chg flat';
+    chg.textContent = `10Y: ${[usY, euY].filter(Boolean).join(' · ')}`;
+    if (snap['IEF'].sig) setSignals('t-bonds', snap['IEF'].sig);
+  }
+
+  // Upgrade single equities with live quotes in background
   await Promise.all(equities.map(async ([sym, tileId, fmt]) => {
     try {
       const q = await fetchYahooQuote(sym);

@@ -1,16 +1,22 @@
 import json, urllib.request, urllib.parse, datetime
 
-# All 8 market tiles: fetch 1y daily closes to compute transparent technical trend signals
-# Short (1M): SMA20 + RSI14 | Medium (3M): SMA50 | Long (1J): SMA200 (or max available for recent IPOs)
 SYMBOLS = [
     ("EURTRY=X", "fx"),
+    ("EURUSD=X", "eurusd"),
     ("GC=F",     "gold"),
+    ("SI=F",     "silver"),
     ("BTC-USD",  "btc"),
+    ("ETH-USD",  "eth"),
+    ("SOL-USD",  "sol"),
     ("^GSPC",    "gspc"),
     ("XU100.IS", "bist"),
     ("VGWD.DE",  "vgwd"),
     ("SPCX",     "spcx"),
     ("ANT",      "ant"),
+    ("^TNX",     "us10y"),
+    ("IEF",      "ief"),
+    ("EUNH.DE",  "eunh"),
+    ("CBON",     "cbon"),
 ]
 
 def calc_rsi(closes, period=14):
@@ -53,28 +59,42 @@ for sym, key in SYMBOLS:
             meta = res["meta"]
             closes = [c for c in res["indicators"]["quote"][0].get("close", []) if c is not None]
             price = meta.get("regularMarketPrice") or (closes[-1] if closes else None)
-            prev = meta.get("chartPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else None)
-            # Use last two daily closes for 1-day % change when available
             if len(closes) >= 2 and price:
                 prev_day = closes[-2]
                 pct = ((price - prev_day) / prev_day) * 100
             else:
+                prev = meta.get("chartPreviousClose") or meta.get("previousClose")
                 pct = ((price - prev) / prev) * 100 if (price and prev) else None
             rsi = calc_rsi(closes, 14)
             sig = {
-                "s": signal_from_sma(price, closes, 20, 0.012, rsi),   # 1M (Short)
-                "m": signal_from_sma(price, closes, 60, 0.020),        # 3M (Medium)
-                "l": signal_from_sma(price, closes, 200, 0.030),       # 1J (Long)
+                "s": signal_from_sma(price, closes, 20, 0.012, rsi),
+                "m": signal_from_sma(price, closes, 60, 0.020),
+                "l": signal_from_sma(price, closes, 200, 0.030),
             }
             out[sym] = {"price": price, "pct": pct, "currency": meta.get("currency"), "sig": sig}
     except Exception as e:
         print("WARN", sym, e)
 
+# Also fetch official ECB 10Y AAA Eurozone yield
+try:
+    req = urllib.request.Request(
+        "https://data-api.ecb.europa.eu/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y?lastNObservations=2&format=jsondata",
+        headers={"User-Agent": "Mozilla/5.0"}
+    )
+    with urllib.request.urlopen(req, timeout=10) as r:
+        d = json.loads(r.read().decode())
+        obs = d["dataSets"][0]["series"]["0:0:0:0:0:0:0"]["observations"]
+        vals = [v[0] for v in obs.values()]
+        if vals:
+            out["EU10Y"] = {"price": vals[-1]}
+except Exception as e:
+    print("WARN_ECB", e)
+
 with open("app/markets.json", "w", encoding="utf-8") as f:
     json.dump(out, f, indent=2)
-print("WROTE app/markets.json:", {k: (v.get("sig") if isinstance(v, dict) else v) for k, v in out.items()})
+print("WROTE app/markets.json:", len(out), "entries")
 
-# Fetch official FotMob season leaders (Top Scorer, Assists, FotMob Rating) + studio cutout portraits
+# Fetch official FotMob season leaders + studio cutout portraits
 leaders = {"updated": datetime.datetime.now(datetime.timezone.utc).isoformat()}
 for key, tid in [("gala", 8637), ("rbl", 178475)]:
     try:
