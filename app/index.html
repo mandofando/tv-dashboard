@@ -1113,37 +1113,66 @@ function teamLogo(comp) {
   return comp?.team?.logos?.[0]?.href || (comp?.team?.id ? `https://a.espncdn.com/i/teamlogos/soccer/500/${comp.team.id}.png` : '');
 }
 
+const standingsCache = {};
+async function getStandingsMap(slug) {
+  if (!slug || slug.includes('cup') || slug.includes('pokal')) return {};
+  if (standingsCache[slug]) return standingsCache[slug];
+  try {
+    const r = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${slug}/standings`);
+    if (!r.ok) return {};
+    const j = await r.json();
+    const map = {};
+    for (const grp of (j.children || [])) {
+      for (const e of (grp.standings?.entries || [])) {
+        const id = String(e.team?.id || '');
+        const rank = e.stats?.find(s => s.name === 'rank')?.displayValue;
+        const pts = e.stats?.find(s => s.name === 'points')?.displayValue;
+        if (id && rank) map[id] = { rank, pts };
+      }
+    }
+    standingsCache[slug] = map;
+    return map;
+  } catch (e) { return {}; }
+}
+
 async function loadClub(league, teamId, prefix) {
   try {
-    const [pastRes, fixRes, standRes] = await Promise.all([
+    const [pastRes, fixRes, mainMap] = await Promise.all([
       fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${teamId}/schedule`),
       fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${teamId}/schedule?fixture=true`),
-      fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${league}/standings`)
+      getStandingsMap(league)
     ]);
     const past = await pastRes.json();
     const fix = await fixRes.json();
-    const stand = await standRes.json();
 
-    // Rank & Points
-    try {
-      const entries = stand.children[0].standings.entries;
-      const entry = entries.find(e => String(e.team.id) === String(teamId));
-      if (entry) {
-        const rank = entry.stats.find(s => s.name === 'rank')?.displayValue || '?';
-        const pts = entry.stats.find(s => s.name === 'points')?.displayValue || '?';
-        document.getElementById(`${prefix}-rank`).textContent = `#${rank} · ${pts} Pkt`;
-      }
-    } catch (e) {}
+    // Header badge: domestic league rank & points
+    const myInfo = mainMap[String(teamId)];
+    if (myInfo) {
+      document.getElementById(`${prefix}-rank`).textContent = `#${myInfo.rank} · ${myInfo.pts} Pkt`;
+    }
 
     // Next 3 upcoming fixtures across ALL competitions
     const upcoming = (fix.events || []).filter(ev => new Date(ev.date).getTime() >= Date.now() - 3600000 * 3);
     upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const top3 = upcoming.slice(0, 3);
+
+    // Preload competition-specific standings for all competitions appearing in top3
+    const slugs = [...new Set(top3.map(ev => ev.league?.slug).filter(Boolean))];
+    await Promise.all(slugs.map(s => getStandingsMap(s)));
+
+    const fmtTeam = (c, slug) => {
+      const m = standingsCache[slug] || {};
+      const rk = m[String(c.team?.id)]?.rank;
+      return rk ? `${c.team.shortDisplayName} <span style="color:#94a3b8;font-weight:600">(${rk}.)</span>` : c.team.shortDisplayName;
+    };
+
     const listEl = document.getElementById(`${prefix}-fixtures`);
-    if (upcoming.length) {
-      listEl.innerHTML = upcoming.slice(0, 3).map((ev, idx) => {
+    if (top3.length) {
+      listEl.innerHTML = top3.map((ev, idx) => {
         const comp = ev.competitions[0];
         const home = comp.competitors.find(c => c.homeAway === 'home');
         const away = comp.competitors.find(c => c.homeAway === 'away');
+        const slug = ev.league?.slug || '';
         const ci = compInfo(ev);
         const dt = new Date(ev.date);
         const tStr = `${DAYS_SHORT[dt.getDay()]} ${dt.getDate()}.${dt.getMonth()+1}. · ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
@@ -1155,10 +1184,10 @@ async function loadClub(league, teamId, prefix) {
           </div>
           <div class="fix-teams">
             <img class="team-ico" src="${teamLogo(home)}" onerror="this.style.display='none'">
-            <span>${home.team.shortDisplayName}</span>
+            <span>${fmtTeam(home, slug)}</span>
             <span class="fix-vs">vs</span>
             <img class="team-ico" src="${teamLogo(away)}" onerror="this.style.display='none'">
-            <span>${away.team.shortDisplayName}</span>
+            <span>${fmtTeam(away, slug)}</span>
           </div>
         </div>`;
       }).join('');
