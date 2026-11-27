@@ -1243,11 +1243,11 @@ const OceanAudio = (() => {
       audioEl.volume = 0;
       // Load real beach wave recording from local file or GitHub CDN
       audioEl.src = location.protocol === 'file:'
-        ? './ocean.mp3'
-        : 'https://cdn.jsdelivr.net/gh/mandofando/tv-dashboard@main/app/ocean.mp3';
+        ? './ocean.mp3?v=3'
+        : 'https://cdn.jsdelivr.net/gh/mandofando/tv-dashboard@main/app/ocean.mp3?v=3';
       audioEl.onerror = () => {
         if (!audioEl.src.includes('raw.githubusercontent.com')) {
-          audioEl.src = 'https://raw.githubusercontent.com/mandofando/tv-dashboard/main/app/ocean.mp3';
+          audioEl.src = 'https://raw.githubusercontent.com/mandofando/tv-dashboard/main/app/ocean.mp3?v=3';
         }
       };
     }
